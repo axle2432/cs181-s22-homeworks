@@ -19,17 +19,14 @@ from scipy.special import expit as sigmoid
 def basis1(x):
     return np.stack([np.ones(len(x)), x], axis=1)
 
-# TODO: Implement this
 def basis2(x):
-    return None
+    return np.stack([np.ones(len(x)), x, x**2], axis=1)
 
-# TODO: Implement this
 def basis3(x):
-    return None
+    return np.stack([np.ones(len(x)), x, x**2, x**3, x**4, x**5], axis=1)
 
 class LogisticRegressor:
     def __init__(self, eta, runs):
-        # Your code here: initialize other variables here
         self.eta = eta
         self.runs = runs
 
@@ -37,7 +34,7 @@ class LogisticRegressor:
     def __dummyPrivateMethod(self, input):
         return None
 
-    # TODO: Optimize w using gradient descent
+    # Optimize w using gradient descent
     def fit(self, x, y, w_init=None):
         # Keep this if case for the autograder
         if w_init is not None:
@@ -45,9 +42,15 @@ class LogisticRegressor:
         else:
             self.W = np.random.rand(x.shape[1], 1)
 
-    # TODO: Fix this method!
+        for _ in range(self.runs):
+            # Compute gradient of logistic loss
+            obj_grad = np.sum((self.predict(x) - y) * x, axis=0).reshape(-1, 1)
+
+            # Update parameters
+            self.W -= self.eta * obj_grad
+
     def predict(self, x):
-        return np.dot(x, self.W)
+        return sigmoid(x @ self.W)
 
 # Function to visualize prediction lines
 # Takes as input last_x, last_y, [list of models], basis function, title
@@ -104,22 +107,22 @@ def generate_data(dataset_size):
     return np.array(x), np.array(y).reshape(-1, 1)
 
 if __name__ == "__main__":
-    
+
     # DO NOT CHANGE THE SEED!
     np.random.seed(1738)
     eta = 0.001
     runs = 10000
     N = 30
 
-    # TODO: Make plot for each basis with all 10 models on each plot
+    # Make plot for each basis with all 10 models on each plot
+    for i in range(1, 4):
+        all_models = []
+        for _ in range(10):
+            x, y = generate_data(N)
+            x_transformed = globals()[f'basis{i}'](x)
+            model = LogisticRegressor(eta=eta, runs=runs)
+            model.fit(x_transformed, y)
+            all_models.append(model)
+        # Here x and y contain last dataset:
+        visualize_prediction_lines(x, y, all_models, globals()[f'basis{i}'], f'Basis {i}')
 
-    # For example:
-    all_models = []
-    for _ in range(10):
-        x, y = generate_data(N)
-        x_transformed = basis1(x)
-        model = LogisticRegressor(eta=eta, runs=runs)
-        model.fit(x_transformed, y)
-        all_models.append(model)
-    # Here x and y contain last dataset:
-    visualize_prediction_lines(x, y, all_models, basis1, "exampleplot")

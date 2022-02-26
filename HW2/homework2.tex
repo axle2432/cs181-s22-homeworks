@@ -8,7 +8,7 @@
 \usepackage[OT1]{fontenc}
 \usepackage[colorlinks,citecolor=blue,urlcolor=blue]{hyperref}
 \usepackage[pdftex]{graphicx}
-\usepackage{subfig}
+%\usepackage{subfig}
 \usepackage{fullpage}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -24,6 +24,9 @@
 \newcommand{\Beta}{\text{Beta}}
 
 \usepackage[mmddyyyy,hhmmss]{datetime}
+
+\usepackage{subcaption}
+\newcommand{\TODO}{{\color{red}TODO }}
 
 \definecolor{verbgray}{gray}{0.9}
 
@@ -157,6 +160,37 @@ Moreover, each plot also displays 1 of the randomly generated datasets and highl
 
 \subsection*{Solution}
 
+\begin{enumerate}
+	\item See supplemental code.
+	
+	\item See Figure \ref{fig:problem 1}.
+	
+		\begin{figure}[h]
+			\centering
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{Basis 1}
+			\end{subfigure}
+			\hfill
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{Basis 2}
+			\end{subfigure}
+			\hfill
+			\vskip\baselineskip
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{Basis 3}
+			\end{subfigure}
+			\caption{Logistic regressions for various bases}
+			\label{fig:problem 1}
+		\end{figure}
+	
+	\item In each graph, the bias of the model class is indicated by the difference between the mean of learned models and the ground truth model, while the variance is indicated by the variability between the ten models in each class, including the model learned from the displayed dataset. From this, we can see that the model class with basis $\phi_1$ has a very high bias, since the mean is dissimilar to the ground truth model, and a very low variance, since all of the ten models look similar. The model class with basis $\phi_2$ has moderate bias and variance, since its mean is somewhat close to the ground truth and the models are roughly similar but have variability. The model class with basis $\phi_3$ has a very low bias, since its mean fits the ground truth model almost exactly, but a very high variance, since its individual models vary wildly. In general, we can see that increasing the size of the model decreases variance while increasing bias. Basis $\phi_1$ does a poor job of approximating the true process since it underfits the data both on average and for individual models. Basis $\phi_2$ does a mediocre job both on average and in individual models. Basis $\phi_3$ does a very good job on average, but dramatically overfits the data in individual models, meaning any given individual model is not a good approximation of the true process. Overall, if only one individual model had to be chosen to approximate the true process, one given by $\phi_2$ would be best, but not ideal, and if an average over multiple models could be chosen, the average of those given by $\phi_3$ would be ideal.
+	
+	\item Increasing the size of each data set would decrease the variance for all of the model classes, especially the model class with highest variance. The overall decrease comes from the fact that as more data points are provided, the data are more likely to be similar across data sets, since they better represent the ground truth, and so the individual models in each class would be more similar to each other. Perhaps more importantly, the variance would decrease most in higher-variance model classes, especially the model class using $\phi_3$, because as more data points are introduced, its models have less ``room" to overfit the data, and must instead become close to the ground truth model, so they will tend to be more similar.
+	
+	By contrast, increasing the size of each dataset would not significantly improve the bias for any of the model classes. This is because the means of the model classes for bases $\phi_1$ and $\phi_2$ are essentially already as close to the ground truth as they can be, given the parameters available to them. In particular, the ground truth model looks as though it can be closely approximated by at least third-degree polynomial, but the first two basis have at most first- and second-order polynomials, respectively. The bias of the model class using $\phi_3$ would improve as its models better approximate the ground truth model, but the mean of the model class is already so close to the ground truth that this increase would not be too significant.
+
+\end{enumerate}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problem 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -235,6 +269,72 @@ $\boldX^{-\top} := (\boldX^{\top})^{-1}$
 
 
 \subsection*{Solution}
+
+\begin{enumerate}
+	\item For data points $\boldx_i$ from class $C_k$ we have
+	$$p(\boldx_i, C_k; \bpi) = p(\boldx_i | \boldy = C_k) p(\boldy = C_k; \bpi) = \pi_k p(\boldx_i | \boldy = C_k).$$
+	
+	The likelihood, using the fact that each $\boldy_i$ is encoded as a one-hot vector, is
+	$$p(D; \bpi) =\prod_{i=1}^n \prod_{k=1}^K (\pi_k p(\boldx_i |  \boldy_i = C_k))^{\boldy_{ik}},$$
+	making the log-likelihood
+	$$\ln p(D; \bpi) = \sum_{i=1}^n \sum_{k=1}^K \boldy_{ik} \ln (\pi_k p(\boldx_i |  \boldy_i = C_k)).$$
+	
+	\item Let $f(\bpi) = - \ln p(D; \bpi)$, $g(\bpi) = \sum_{k=1}^K \pi_k - 1$, and use Lagrange Multipliers to find
+	$$\min_{\bpi} f(\bpi)\ \text{s.t.}\ g(\bpi) = 0.$$
+	Letting $\ln p(D; \bpi)$ be as in part 1, the Langrangian function is
+	$$L(\bpi, \lambda) = f(\bpi) + \lambda g(\bpi) = -\sum_{i=1}^n \sum_{k=1}^K \boldy_{ik} \ln (\pi_k p(\boldx_i |  \boldy_i = C_k)) + \lambda \sum_{k=1}^K \pi_k - \lambda.$$
+	Differentiating with respect to $\bpi$,
+	\begin{align*}
+		\frac{\partial L(\bpi, \lambda)}{\partial(\bpi)}
+		= \left(\frac{\partial L(\bpi, \lambda)}{\partial(\pi_1)}, \ldots, \frac{\partial L(\bpi, \lambda)}{\partial(\pi_K)}\right)
+		= \left(-\frac{1}{\pi_1} \sum_{i=1}^n \boldy_{i1} + \lambda, \ldots, -\frac{1}{\pi_K} \sum_{i=1}^n \boldy_{iK} + \lambda \right).
+	\end{align*}
+	Setting this derivative equal to the zero vector gives
+	$$\lambda = \frac{1}{\hat \pi_1} \sum_{i=1}^n \boldy_{i1} = \ldots = \frac{1}{\hat \pi_K} \sum_{i=1}^n \boldy_{iK}.$$
+	This implies that there exists an $\alpha \in \mathbb{R}, \alpha \neq 0$ such that for all $k \in \{1, \ldots, K\}$,
+	$$\hat \pi_k = \alpha \sum_{i=1}^n \boldy_{ik}.$$
+	Differentiating $L(\bpi, \lambda)$ with respect to $\lambda$ and setting equal to zero gives our original constraint $\sum_{k=1}^K \hat \pi_k = 1$. Substituting the above expression for $\hat \pi_k$ into this constraint,
+	$$\sum_{k=1}^K \left(\alpha \sum_{i=1}^n \boldy_{ik}\right) = 1,$$
+	so
+	$$\alpha = \frac{1}{\sum_{i=1}^n \sum_{k=1}^K \boldy_{ik}}.$$
+	Therefore, for all $k \in \{1, \ldots, K\}$, the maximum-likelihood estimator for the prior class-membership probability is
+	$$\hat \pi_k = \frac{\sum_{i=1}^n \boldy_{ik}}{\sum_{i=1}^n\sum_{k=1}^K \boldy_{ik}}.$$
+	This answer is intuitive because it is simply the empirical probability of observing the class $C_k$ in the data set $D$, just like the MLE for $\pi$ in the two-class setting.
+	
+	\item First substitute the multivariate Gaussian PDF into the log-likelihood and simplify, letting $d$ be the number of features in a each input vector $\boldx_i$:
+	\begin{align*}
+		\ln p(D; \bpi) &= \sum_{i=1}^n \sum_{k=1}^K \boldy_{ik} \ln(\pi_k \mathcal{N}(\boldx_i |  \bmu_k, \bSigma)) \\
+		&= \sum_{i=1}^n \sum_{k=1}^K \boldy_{ik} \ln \left(\pi_k \frac{1}{(2\pi)^{d/2} |\bSigma|^{1/2}} \exp \left(-\frac12(\boldx_i - \bmu_k)^T \bSigma^{-1} (\boldx_i - \bmu_k) \right) \right) \\
+		&= -\frac{nd}{2}\ln2\pi - \frac{n}{2}\ln |\bSigma| + \sum_{i=1}^{n}\sum_{k=1}^K \boldy_{ik} \pi_k -\frac12 \sum_{i=1}^{n}\sum_{k=1}^K \boldy_{ik} (\boldx_i - \bmu_k)^T \bSigma^{-1} (\boldx_i - \bmu_k).
+	\end{align*}
+	Differentiating with respect to $\bmu_k$ using equation 78 from ``The Matrix Cookbook" and the fact that the covariance matrix and its inverse are symmetric,
+	\begin{align*}
+		\frac{\partial \ln p(D; \bpi)}{\partial \bmu_k} &= -\frac12 \sum_{i=1}^{n} \frac{\partial}{\partial \bmu_k} \boldy_{ik} (\boldx_i - \bmu_k)^T \bSigma^{-1} (\boldx_i - \bmu_k) \\
+		&= -\frac12 \sum_{i=1}^{n} \boldy_{ik} (-\bSigma^{-1}(\boldx_i - \bmu_k) - (\bSigma^{-1})^T (\boldx_i - \bmu_k)) \\
+		&= \bSigma^{-1} \sum_{i=1}^{n} \boldy_{ik} (\boldx_i - \bmu_k).
+	\end{align*}
+	If we want to put this expression for the gradient in matrix form, let $\boldX \in \mathbb{R}^{n \times d}$ be the matrix whose $i$th row is $\boldx_i^T$ and let $\boldY \in \mathbb{R}^{n \times k}$ be the matrix whose $i$th row is $\boldy_{i}$ for all $(\boldx_i, \boldy_i) \in D = \{(\boldx_i, \boldy_i)\}_{i=1}^n$. Then gradient is
+	$$\bSigma^{-1} (\boldX^T - \bmu_k (\boldY^T)_k) (\boldY^T)_k^T,$$
+	since $\boldX^T$ is a $d \times n$ matrix, $(\boldY^T)_k$ is a $1 \times n$ vector with entries equal to one for inputs with class $C_k$ and zeros elsewhere, $\bmu_k (\boldY^T)_k$ is a $d \times n$ matrix whose columns are $\bmu_k$ for each column in $\boldX_T$ with class $C_k$ and zero elsewhere.
+	
+	\item Setting non-matrix form gradient expression above equal to zero and rearranging, using the fact that $\bSigma^{-1}$ is invertible, gives
+	$$\bSigma^{-1} \sum_{i=1}^{n} \boldy_{ik} \boldx_i =  \bSigma^{-1} \sum_{i=1}^{n} \boldy_{ik} \hat \mu_k$$
+	$$\hat \mu_k = \frac{\sum_{i=1}^n \boldy_{ik} \boldx_i}{\sum_{i=1}^n \boldy_{ik}}.$$
+	This answer is intuitive because it is simply the empirical mean of all inputs $\boldx_i$ in $D$ that are in class $C_k$, just like the MLE for $\bmu_k$ in the two-class setting.
+	
+	\item Differentiating the expanded log-likelihood from the start of part 3 using ``The Matrix Cookbook" equations 57 and 61 provided in the description of this problem,
+	\begin{align*}
+		\frac{\partial \ln p(D; \bpi)}{\partial \bSigma} &= \frac{\partial}{\partial \bSigma} \left( - \frac{n}{2}\ln |\bSigma| -\frac12 \sum_{i=1}^{n}\sum_{k=1}^K \boldy_{ik} (\boldx_i - \bmu_k)^T \bSigma^{-1} (\boldx_i - \bmu_k) \right) \\
+		&= -\frac{n}{2} \bSigma^{-T} + \frac12 \sum_{i=1}^{n}\sum_{k=1}^K \boldy_{ik} \bSigma^{-T} (\boldx_i - \bmu_k)(\boldx_i - \bmu_k)^T \bSigma^{-T} \\
+		&= -\frac{n}{2} \bSigma^{-T} + \frac12 \bSigma^{-T} \left( \sum_{i=1}^{n}\sum_{k=1}^K \boldy_{ik} (\boldx_i - \bmu_k)(\boldx_i - \bmu_k)^T \right) \bSigma^{-T}.
+	\end{align*}
+	
+	\item Set the gradient from part 5 equal to zero and multiply both sides by $\bSigma^T$ from the left and the right to retaining $\bSigma^T$ only in the first term, obtaining
+	$$0 = -\frac{n}{2} \hat \Sigma^T + \frac12 \sum_{i=1}^{n}\sum_{k=1}^K \boldy_{ik} (\boldx_i - \bmu_k)(\boldx_i - \bmu_k)^T$$
+	$$\hat \Sigma = \frac1{n} \sum_{i=1}^n \sum_{k=1}^K \boldy_{ik}(\boldx_i - \bmu_k)(\boldx_i - \bmu_k)^T.$$
+	This answer is again fairly intuitive because it is the weighted average of the empirical covariance matrices for each class, like the MLE for $\bSigma$ in the two-class setting.
+	
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problem 3
@@ -345,18 +445,108 @@ values in \texttt{T2\_P3.py} for logistic regression.
 
 \subsection*{Solution}
 
+\begin{enumerate}
+	\item See Figures \ref{fig:logistic_regression_classifier}, \ref{fig:gaussian_classifiers}, and \ref{fig:knn_classifiers}.
+	
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.475\textwidth]{logistic_regression_result}
+			\caption{Logistic Regression Classifier ($\eta = 0.001, \lambda = 0.001$)}
+			\label{fig:logistic_regression_classifier}
+		\end{figure}
+		
+		\begin{figure}[h]
+			\centering
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{generative_result_shared_covariances}
+			\end{subfigure}
+			\hfill
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{generative_result_separate_covariances}
+			\end{subfigure}
+			\caption{Generative Gaussian Classifiers}
+			\label{fig:gaussian_classifiers}
+		\end{figure}
+		
+		\begin{figure}[h]
+			\centering
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{knn1_result}
+			\end{subfigure}
+			\hfill
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{knn3_result}
+			\end{subfigure}
+			\hfill
+			\vskip\baselineskip
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{knn5_result}
+			\end{subfigure}
+			\caption{KNN Classifiers}
+			\label{fig:knn_classifiers}
+		\end{figure}
+
+		All of the classifiers do at a good job of fitting the red ``dwarf" and green ``supergiant" points in the training data, but the classifiers vary greatly in the quality of the predictions for the blue ``giant" points. Additionally, the shape and position of the classifiers' decision boundaries vary greatly. The logistic regression and generative Gaussian with shared covariance decision boundaries are very linear and positively correlated and therefore appear to do a relatively poor job of predicting the blue region with its downward trend. This happens because even though these models do have different parameters for the different classes, they are also influenced by information about all of the points overall, because of the gradient calculations and shared covariance matrices. This means that the overall trends of the decision boundaries follow the trends of the majority of points, namely the red and green points. Both of these classifiers have linear boundaries because there are lines where the probability of being in a particular class on either side of the line is even, with the probability increasing for one side or the other when moving away from that line.
+		
+		The generative model with separate covariances also has somewhat linear decision boundaries, but has much tighter and better prediction regions for the blue and green points, which are roughly symmetric about the line of red points. This is arguably the best classifier since it closely follows the trends of all of the sets of red, blue, and green points separately. The generative model with separate covariances creates these decision boundaries because the shared covariance matrices allow the model to reflect the distinctive variances and covariances within classes that predict, for instance, the negative correlation for the blue class between magnitude and temperature and positive correlations for the other classes between the same two variables. The blue and green regions are symmetric about the plot of red points because points very close to the red training data where it intersects the blue and green training data are more likely to be red, but points slightly farther away can be safely classified as blue or green.
+		
+		Finally, the KNN classifiers are quite different from the other classifiers because their decision boundaries are all non-linear and curve around the groups of data points for each class. This is because the KNN classifiers make predictions for a given point based on the distance from training points, which results in very curvy prediction boundaries that weave between the classes of points. Because of these curvy prediction lines, the KNN models are able to better reflect the trends of the blue and green points than the logistic regression and generative model with shared covariance. The KNN models are fairly similar for all of the values of $k$ tested, with the main difference being the predictions of the model for the lower left corner of the graph where the green and red training points meet. As $k$ increases, the predictions favor the green points because there are more of these points gathered in that region of the graph. Determining which value of $k$ is best here involves trade-off between the green and red predictions, which is made difficult because the lines of training points appear to intersect. To evenly divide the green and red regions, $k=1$ or $k=3$ seem best.
+	
+	\item See Figure \ref{fig:logistic_regression_loss}.
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.7\textwidth]{logistic_regression_loss}
+			\caption{Logistic Regression Loss}
+			\label{fig:logistic_regression_loss}
+		\end{figure}
+	
+	Based on this plot and looking at the decision boundaries produced by different configurations of hyperparameters, my final choices are $\eta = 0.01$ and $\lambda=0.01$. From the graph, we can see that $\eta=0.1, \lambda=0.1$, $\eta=0.05,\lambda=0.05$, and $\eta=0.05, \lambda=0.01$ do not converge within 200,000 iterations because their learning rate and regularization strength are so high that the loss continually oscillates, making these very bad choices of hyperparameters. The models with the remaining hyperparameters do appear to converge. All three of the models with $\lambda = 0.001$ converge to a loss of zero, however the model with $\eta=0.05$ does so much more quickly than the other models, making it the best choice of the three. The remaining two models with $\lambda=0.05$ converge to a loss of around 4, with the model with $\eta =0.01$ converging faster. Similarly, the remaining two models with $\lambda=0.01$ converge to a loss of around 2.5, with the model with $\eta =0.01$ converging faster. At this point, the best learning rate appears to be $\eta = 0.01$, because it allows fast convergence, while the best regularization strength depends on how much loss we wish to have. This is a potentially difficult choice because minimizing training loss it not necessarily the best choice due to the danger of overfitting. Ultimately I chose $\eta = 0.01, \lambda = 0.01$ as a good middle ground in terms of loss because $\lambda = 0.001$ appeared to slightly overfit the data and $\lambda = 0.05$ appeared to slightly underfit the data.
+	
+	\item 
+	\texttt{Separate Covariance negative log-likelihood: 63.97035984092418 \\
+	Shared Covariance negative log-likelihood: 116.39446507788162}
+	
+	The separate covariance model has a lower loss because having separate covariance information about each class allows the model to be more certain about points that appear to match that class. By contrast, with a shared covariance matrix, these nuances are lost and training class predictions become less certain, and some become incorrect. In particular, the separate covariances matrices allow the model to reflect the positive correlation between features for the red and green points and the negative correlation between the features for the blue points, which are not reflected by the shared covariance matrix. This is evident in the decision boundary plots in Figure \ref{fig:gaussian_classifiers}. With separate covariance matrices, the blue and green regions are grouped much more tightly around the blue and green training points, whereas with shared a shared covariance matrix, the decision boundaries are much looser and the prediction trends are overly general. This leads to higher loss in the shared covariance model, because it does not reflect the training data as well.
+	
+	\item Consider a star with Magnitude 6 and Temperature 2.
+	To what class does each classifier assign this star? Do the
+	classifiers give any indication as to whether or not you should
+	trust them?
+	
+	\texttt{Test star type predictions for Separate Covariance Gaussian Model: \\
+		magnitude 6 and temperature 2: 0 \\
+		Test star type predictions for Shared Covariance Gaussian Model: \\
+		magnitude 6 and temperature 2: 1 \\
+		Test star type predictions for Linear Regression: \\
+		magnitude 6 and temperature 2: 1 \\
+		Test star type predictions for KNN Model with k=1: \\
+		magnitude 6 and temperature 2: 0 \\
+		Test star type predictions for KNN Model with k=3: \\
+		magnitude 6 and temperature 2: 0 \\
+		Test star type predictions for KNN Model with k=5: \\
+		magnitude 6 and temperature 2: 0
+	}
+
+	I trust the predictions from the separate covariance Gaussian and KNN models more than those from the shared covariance Gaussian and logistic regression models because the former set of models fit the trainining data better than the latter set, for reasons already described above. In particular, although we don't know the class of this new data point, visually it seems more likely to an outlier dwarf with a high temperature than a giant, because the giants trend downwards and are quite tightly packed together, while the dwarves trend upwards and are closer to this new data point. If we wanted to, we could print out the probabilities for each class returned by the Gaussian and logistic regression models to see how certain each of these classifiers are in their choice for the new data point. If they predicted one class with high probability, we might be more inclined to trust them than if their probabilities were nearly tied between some classes. Somewhat analagously, we could print out the classes of nearest neighbors found by KNN, and see whether there was a clear majority or just a plurality. However, these metrics still reflect the inbuilt biases in the models, so they wouldn't tell us conclusively which predictions to trust.
+	
+\end{enumerate}
+
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Name and Calibration
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection*{Name}
 
+Alex Encalada-Stuart
+
 \subsection*{Collaborators and Resources}
 Whom did you work with, and did you use any resources beyond cs181-textbook and your notes?
+
+No one and no.
 
 \subsection*{Calibration}
 Approximately how long did this homework take you to complete (in hours)?
 
-
+14
 
 \end{document}

@@ -15,8 +15,9 @@ from T2_P3_KNNModel import KNNModel
 # adjust these as you try to find the best fit for each classifier.
 
 # Logistic Regression hyperparameters
-eta = 0.1 # Learning rate
-lam = 0.1 # Lambda for regularization
+# CS 181 staff said on Ed to use these for standardizing the plot for Q 3.1
+eta = 0.001 # Learning rate
+lam = 0.001 # Lambda for regularization
 
 # Whether or not you want the plots to be displayed
 show_charts = True
@@ -108,7 +109,6 @@ knn5 = KNNModel(k=5)
 knn5.fit(X, y)
 visualize_boundary(knn5, X, y, 'knn5_result')
 
-
 # Setting up some sample data
 X_test = np.array([[6, 2]])
 y_nb1 = nb1.predict(X_test)
@@ -136,3 +136,4 @@ print('magnitude 6 and temperature 2: {}'.format(y_knn3[0]))
 
 print('Test star type predictions for KNN Model with k=5:')
 print('magnitude 6 and temperature 2: {}'.format(y_knn5[0]))
+
