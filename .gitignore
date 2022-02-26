@@ -1,3 +1,11 @@
+*.swp
+__pycache__/
 .DS_Store
-.idea
-.vscode
+.ipynb_checkpoints
+
+# LaTeX aux files
+*.aux
+*.log
+*.out
+*.synctex.gz
+

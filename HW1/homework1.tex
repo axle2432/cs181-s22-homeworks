@@ -19,6 +19,8 @@
 \usepackage{common}
 \usepackage{framed}
 
+\usepackage{subcaption}
+
 \usepackage[mmddyyyy,hhmmss]{datetime}
 
 \definecolor{verbgray}{gray}{0.9}
@@ -30,6 +32,8 @@
   basicstyle=\ttfamily,
   columns=fullflexible}}{}
  
+\newcommand{\TODO}{{\color{red}TODO }}
+\newcommand{\solution}{{\textbf{Solution }}}
 
 \begin{document}
 \begin{center}
@@ -116,6 +120,22 @@ should be.
 
 \end{problem}
 
+\begin{enumerate}
+	\item The least squares loss over the training data is
+	$$\mcL(W) = \sum_{n=1}^N \left(y_n - f(x_n)\right)^2.$$
+	Substituting $f(x_n)$ with its definition, including all terms $K(x_n, x_i)$ in the sum except when $n = i$, to prevent leakage from using $y_n$ to predict $f(x_n)$:
+	$$\mcL(W) = \sum_{n=1}^N \left(y_n - \sum_{i \neq n} K(x_n, x_i)y_i\right)^2
+	= \sum_{n=1}^N \left(y_n - \sum_{i \neq n} \exp\left(\frac{-||x-x'||^2_2}{\tau}\right)y_i\right)^2.$$
+	
+	\item Differentiating,
+	\begin{align*}
+		\frac{d}{d\tau} \mcL(W) &= \frac{d}{d\tau} \sum_{n=1}^N \left(y_n - \sum_{i \neq n} \exp\left(\frac{-||x-x'||^2_2}{\tau}\right)y_i\right)^2 \\
+		&= 2 \sum_{n=1}^N \left(y_n - \sum_{i \neq n} \exp\left(\frac{-||x-x'||^2_2}{\tau}\right)y_i\right) \cdot \sum_{i \neq n} \left(\frac{-||x-x'||^2_2}{\tau^2}\right) \exp\left(\frac{-||x-x'||^2_2}{\tau}\right)y_i.
+	\end{align*}
+	
+	
+\end{enumerate}
+
 \newpage
 
 \begin{framed}
@@ -172,7 +192,31 @@ in the command-line using \texttt{python T1\_P1\_TestCases.py}.
 
 \end{enumerate}
   
-\end{framed}  
+\end{framed}
+
+\begin{enumerate}
+	\setcounter{enumi}{2}
+	\item The losses are \\
+	\texttt{
+	Loss for tau = 0.01: 8.75 \\
+	Loss for tau = 2: 3.305016494565789 \\
+	Loss for tau = 100: 120.35919342230957}. \\
+	The lengthscale that does best is $\tau = 2$, which minimizes the loss over the three lengthscales tested.
+
+	\item 
+	
+	\begin{figure}[h]
+		\includegraphics{T1_P1_plot}
+	\end{figure}
+
+	The plots demonstrate that as $\tau$ increases, values farther away in the training set are weighted higher relative to closer values. When $\tau = 0.01$, $f(x^*)$ has very sharp peaks around the training values and is zero everywhere else, meaning that predictions are highly based on close values. When $\tau = 2$, $f(x^*)$ is smoother, because it lends a fair amount of weight to close values and less to far values. When $\tau = 100$, $f(x^*)$ is extremely smooth because it weighs all values similarly, so much so that nuances in the training set are lost.
+	
+	This is consistent with $\tau=2$ being the numerically best of the three lengthscales, since the corresponding $f(x^*)$ is curvy enough to follow the trends in the training data, while being smooth enough to approximate points in between those in the training data.
+
+	\item Bonus
+
+\end{enumerate}
+
 
 \newpage
 
@@ -222,6 +266,35 @@ As before, you will plot $x^*$ on the x-axis and the prediction $f(x^*)$ on the 
 
 \end{problem}
 
+\begin{enumerate}
+	\item See Figure \ref{fig:kNN}.
+	
+	\begin{figure}[h]
+			\centering
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{k1}
+			\end{subfigure}
+		 	\hfill
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{k3}
+			\end{subfigure}
+			\hfill
+			\vskip\baselineskip
+			\begin{subfigure}[b]{0.475\textwidth}
+				\includegraphics[width=\textwidth]{k6}
+			\end{subfigure}
+			\caption{KNN Predictions}
+			\label{fig:kNN}
+	\end{figure}
+
+	
+	\item All of the kNN functions are  step functions comprised of flat sections, where points in a given range have the same $k$ nearest neighbors, and rapid jumps, where one of the nearest neighbors changes and the value of $f(x^*)$ changes accordingly. As with $\tau$ in kernel-based regression, lower values of $k$ are more influenced by local training data points, while higher values of $k$ are more globally influenced. Also as with kernel-based regression, the first parameter tested seems to overfit the data, the second fits relatively well, and the underfits the data. Interpolation is somewhat similar between kernel-based regression and kNN, but extrapolation is very different. Because all $x^*$ greater than the greatest $x_n$ in the training set have the same $k$ nearest neighbors, they all map to the same $f(x^*)$, and likewise with $x^*$ smaller than the smallest $x_n$. This means kNN extrapolates quite poorly, in contrast to kernel-based regression with appropriate values of $\tau$, which smooths off convincingly as the data trends down when $x^*$ increases.
+	
+	Based on this, it does not seem as though there are $k$ and $\tau$ such that the kNN and kernel-based regressors produce the exact same classifier, since kernel-based regression is ``smooth" and the kNN functions are step functions, regardless of $k$ and $\tau$. Consequently, the approaches extrapolate differently. A possible exception might be $k \geq N$ and very large values of $\tau$, both of which effectively map all points to the average of the training data $y$ values, but this would still be an approximate match.
+	
+	\item The value of $\tau$ does not matter for the kNN approach, as long as it is positive, because the values of $K(x_n, x^*)$ change depending on $\tau$, but the relative orderings of the $k$ nearest neighbors will be the same. The means that the same $k$ nearest neighbors are selected regardless of $\tau$, and thus the predicted values will be the same.
+	
+\end{enumerate}
 
 \newpage 
 
@@ -274,6 +347,29 @@ $y$ are scalars, $w$ is also a scalar.
 
 \end{problem}
 
+\begin{enumerate}
+	\item The expected squared loss expands to
+	\begin{align*}
+	E_{x,y}[(y-\hat{y})^2] &= E_{x,y}[(y-wx)^2]  \\
+	&= E_{x,y}[y^2 - 2wyx + w^2x^2] \\
+	&= E_{x,y}[y^2] - 2wE_{x,y}[yx] + w^2E_{x,y}[x^2].
+	\end{align*}
+	Differentiating with respect to $w$ gives
+	$$-2E_{x, y}[yx] + 2wE_{x, y}[x^2].$$
+	To optimize $w$, set equal to zero and solve, giving
+	$$w^* = \frac{E_{x,y}[yx]}{E_{x,y}[x^2]} = \frac{E_{x,y}[yx]}{E_{x}[x^2]}.$$
+	
+	\item The moments can be estimated by appropriately manipulating and averaging the observed quantities: $$E_{x,y}[yx] \approx \frac1N \sum_{i=1}^N y_i x_i$$
+	$$E_{x}[x^2] \approx \frac1N \sum_{i=1}^N x_i^2.$$
+	These formulas are unbiased and consistent because they approach the true expected values as more data is provided.
+	
+	\item Substituting in the empiricial moments and treating the scalars as $(1 \times 1)$ vectors,
+	$$w^* \approx \frac{\frac1N\sum_{i=1}^N y_i x_i}{\frac1N\sum_{i=1}^N x_i^2} = \frac{\sum_{i=1}^N y_i x_i}{\sum_{i=1}^N x_i^2} = \frac{x^Ty}{x^Tx} = (x^Tx)^{-1}x^Ty,$$
+	which is equal to the optimal $w^*$ from the textbook in the $D = 1$ case.
+	
+	\item No, none of my above derivations relied on the assumption that $x$ and $y$ are jointly Gaussian, because they did not use any special properties or identities particular to jointly Gaussian distributions. The expressions are comprised of moments, which can come from any distribution.
+
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problem 4
@@ -357,6 +453,81 @@ Given the quality of this fit, do you believe that the number of sunspots contro
 \end{enumerate}
 \end{framed}
 
+\begin{enumerate}
+	\item
+	
+	\begin{figure}[h]
+		\centering
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{a}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{b}
+		\end{subfigure}
+		\hfill
+		\vskip\baselineskip
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{c}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{d}
+		\end{subfigure}
+		\caption{Year v. Republicans Bases}
+		\label{fig:4.1}
+	\end{figure}
+
+	See Figure \ref{fig:4.1} for plots. The residual sum of squares errors are:
+	
+	\begin{center}
+	\begin{tabular}{|c|c|}
+		\hline
+		a & 394.980 \\ \hline
+		b & 54.273 \\ \hline
+		c & 1082.809 \\ \hline
+		d & 39.001 \\ \hline
+	\end{tabular}
+	\end{center}
+	All of the bases did reasonably well for predicting years versus number of Republicans in the Senate, but bases b and d were clearly the best, with d being best overall due to better prediction in the most recent years. Basis c did not perform as well as d simply because it had fewer component cosine functions to work with. Basis a tended to result in a regression line in the middle of the data points, as opposed to one that oscillated to predict them more accurately.
+
+	\item 
+	
+		\begin{figure}[h]
+		\centering
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{a_sunspots}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{c_sunspots}
+		\end{subfigure}
+		\hfill
+		\vskip\baselineskip
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{d_sunspots}
+		\end{subfigure}
+		\caption{Sunspots v. Republicans Bases}
+		\label{fig:4.2}
+	\end{figure}
+
+	See Figure \ref{fig:4.2} for plots. The residual sum of squares errors are:
+
+	\begin{center}
+		\begin{tabular}{|c|c|}
+			\hline
+			a & 351.228 \\ \hline
+			b & 375.107 \\ \hline
+			d & 1.7054552789315644e-21 \\ \hline
+		\end{tabular}
+	\end{center}
+	
+	Basis d technically provided the best fit because it it made the residual sum of squares error basically zero. (Additionally, in the question 4.1, d provided the lowest error and the best visual fit.)
+	
+	However, in this question, the plot made by d is highly suspect. Even though it passes through all of the data points, it has massive peaks outside of them and also dips below zero to predict negative numbers of Republicans in the Senate, which does not make sense. Given the low quality of this fit, and the low qualities of the other bases a and c, I do not believe that the number of sunspots controls the number of Republicans in the Senate. If this were the case, I would expect at least one of the regression lines to show a clear positive (or negative) correlation between the number of sunspots and number of Republicans in the Senate, since this would be implied by causation.	
+
+\end{enumerate}
+
 
 
 \newpage
@@ -365,10 +536,16 @@ Given the quality of this fit, do you believe that the number of sunspots contro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection*{Name}
 
+Alex Encalada-Stuart
+
 \subsection*{Collaborators and Resources}
 Whom did you work with, and did you use any resources beyond cs181-textbook and your notes?
 
+I did not collaborate with anyone. The CS 181 Code Crash Course was very helpful, but other than that I did not use other resources.
+
 \subsection*{Calibration}
 Approximately how long did this homework take you to complete (in hours)? 
+
+12
 
 \end{document}

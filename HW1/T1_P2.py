@@ -32,9 +32,16 @@ print(y_train)
 
 def predict_knn(k=1, tau=1):
     """Returns predictions for the values in x_test, using KNN predictor with the specified k."""
-    # TODO: your code here
-    return np.zeros(len(x_test))
-
+    def K(x_n, x_star):
+        return np.exp(-np.power(np.linalg.norm(x_n - x_star), 2) / tau)
+    y_test = np.zeros(len(x_test))
+    for i, x_star in enumerate(x_test):
+        distances = [(K(x_n, x_star), y_n) for x_n, y_n in data]
+        # break ties in favor of higher x values for consistency with staff tests
+        nearest = sorted(distances, key = lambda t: t[0])
+        f_x_star = sum([y_n for _, y_n in nearest[-k:]]) / k
+        y_test[i] = f_x_star
+    return y_test
 
 def plot_knn_preds(k):
     plt.xlim([0, 12])

@@ -55,7 +55,7 @@ X = np.vstack((np.ones(years.shape), years)).T
 
 # TODO: basis functions
 # Based on the letter input for part ('a','b','c','d'), output numpy arrays for the bases.
-# The shape of arrays you return should be: (a) 24x6, (b) 24x12, (c) 24x6, (c) 24x26
+# The shape of arrays you return should be: (a) 24x6, (b) 24x12, (c) 24x6, (d) 24x26
 # xx is the input of years (or any variable you want to turn into the appropriate basis).
 # is_years is a Boolean variable which indicates whether or not the input variable is
 # years; if so, is_years should be True, and if the input varible is sunspots, is_years
@@ -67,9 +67,38 @@ def make_basis(xx,part='a',is_years=True):
         
     if part == "a" and not is_years:
         xx = xx/20
+
+    # Turn xx into column vector
+    xx = np.atleast_2d(xx).T
+    
+    # Include bias term of 1
+    phi = np.atleast_2d(np.ones(xx.shape[0])).T
+    
+    if part == 'a':
+        # Let all the a_j = 1
+        for j in range(1, 6):
+            phi_j = xx ** j
+            phi = np.hstack((phi, phi_j))
+
+    elif part == 'b':
+        for mu_j in range(1960, 2015, 5):
+            phi_j = np.exp(-np.power(xx - mu_j, 2) / 25)
+            phi = np.hstack((phi, phi_j))
         
-        
-    return None
+    elif part == 'c':
+        for j in range(1, 6):
+            phi_j = np.cos(xx / j)
+            phi = np.hstack((phi, phi_j))
+
+    elif part == 'd':
+        for j in range(1, 26):
+            phi_j = np.cos(xx / j)
+            phi = np.hstack((phi, phi_j))
+            
+    else:
+        raise ValueError("Invalid part")
+    
+    return phi
 
 # Nothing fancy for outputs.
 Y = republican_counts
@@ -82,13 +111,54 @@ def find_weights(X,Y):
 # Compute the regression line on a grid of inputs.
 # DO NOT CHANGE grid_years!!!!!
 grid_years = np.linspace(1960, 2005, 200)
-grid_X = np.vstack((np.ones(grid_years.shape), grid_years))
-grid_Yhat  = np.dot(grid_X.T, w)
 
-# TODO: plot and report sum of squared error for each basis
+# Year v. Number of Republicans in the Senate
+for part in ['a', 'b', 'c', 'd']:
+    # Find weights based on training data and print error
+    X = make_basis(years, part, is_years=True)
+    w = find_weights(X, Y)
+    Yhat = np.dot(X, w)
+    rss_error = np.sum(np.power(Y - Yhat, 2))
+    print("The residual sum of squares error for part " + part +
+          " is " + str(rss_error))
 
-# Plot the data and the regression line.
-plt.plot(years, republican_counts, 'o', grid_years, grid_Yhat, '-')
-plt.xlabel("Year")
-plt.ylabel("Number of Republicans in Congress")
-plt.show()
+    # Calculate regression line
+    grid_X = make_basis(grid_years, part, is_years=True)
+    grid_Yhat = np.dot(grid_X, w)
+
+    # Plot the data and the regression line.
+    plt.title("Part " + part)
+    plt.plot(years, republican_counts, 'o', grid_years, grid_Yhat, '-')
+    plt.xlabel("Year")
+    plt.ylabel("Number of Republicans in Congress")
+    plt.savefig(part + ".png", facecolor="white")
+    plt.show()
+    
+# Number of Sunspots v. Number of Republicans in the Senate
+for part in ['a', 'c', 'd']:
+    # Only use data from before 1985
+    republican_counts_pre_1985, sunspot_counts_pre_1985 = zip(*[(r, s) for y, r, s in zip(years, republican_counts, sunspot_counts) if y < 1985])
+    republican_counts_pre_1985 = np.array(republican_counts_pre_1985)
+    sunspot_counts_pre_1985 = np.array(sunspot_counts_pre_1985)
+    
+    # Find weights based on training data and print error
+    X = make_basis(sunspot_counts_pre_1985, part, is_years=False)
+    Y = republican_counts_pre_1985
+    w = find_weights(X, Y)
+    Yhat = np.dot(X, w)
+    rss_error = np.sum(np.power(Y - Yhat, 2))
+    print("The residual sum of squares error for part " + part +
+          " is " + str(rss_error))
+
+    # Calculate regression line
+    grid_sunspots = np.linspace(0, 160, 200)
+    grid_X = make_basis(grid_sunspots, part, is_years=False)
+    grid_Yhat = np.dot(grid_X, w)
+
+    # Plot the data and the regression line.
+    plt.title("Part " + part)
+    plt.plot(sunspot_counts_pre_1985, republican_counts_pre_1985, 'o', grid_sunspots, grid_Yhat, '-')
+    plt.xlabel("Number of Sunspots")
+    plt.ylabel("Number of Republicans in Congress")
+    plt.savefig(part + "_sunspots.png", facecolor="white")
+    plt.show()
