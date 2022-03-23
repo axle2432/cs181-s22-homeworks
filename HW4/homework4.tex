@@ -21,6 +21,8 @@
 
 \usepackage[mmddyyyy,hhmmss]{datetime}
 
+\usepackage{comment}
+
 \definecolor{verbgray}{gray}{0.9}
 
 \lstnewenvironment{csv}{
@@ -114,6 +116,65 @@ the questions below when composing your answers, and to justify each step.
 \end{problem}
 
 \subsection*{Solution}
+
+\begin{enumerate}
+	\item By inspection, the optimal decision boundary of the max margin classifier is the line where the second dimension is equal to -1.
+	
+	\begin{center}
+		\includegraphics[width=0.7\textwidth]{SVM}
+	\end{center}
+	
+	\item The value of the margin is 1, since the datapoints with $-2 \leq x_i \leq 2$ are all distance 1 from the optimal decision boundary.
+	
+	\item The unit vector
+	%$\begin{bmatrix} 0 \\ 1 \end{bmatrix}$
+	$(0, 1)^\top$
+	is orthogonal to the decision boundary.
+	
+	\item The decision boundary is the line where the discriminant is equal to 0, which occurs here when $\phi_2(x) = -1$. Plugging this in to the discriminant equation,
+	\begin{align*}
+		0 &= h(\bphi(x);\boldw,w_0) \\
+		&= \boldw^\top\bphi(x) +w_0 \\
+		&= w_1\phi_1(x) + w_2\phi_2(x) + w_0 \\
+		&= w_1\phi_1(x) - w_2 + w_0.
+	\end{align*}
+	Since $\boldw$ is orthogonal to the decision boundary and thus parallel to $(0, 1)^\top$, we have $w_1 = 0$, leaving
+	$$w_2 = w_0.$$
+	Therefore, the set of all possible $(\boldw, w_0)$ that define the optimal decision boundary is
+	$$\{(\boldw, w_0) : w_1 = 0, w_2 = w_0\}.$$
+
+	\item The training problem is
+	$$\min_{\boldw, w_0} \frac12||\boldw||_2^2 \quad \text{s.t.} \quad y_i(\boldw^\top\phi(x_i) + w_0) \geq 1, \forall i \in \{1, \ldots, n\}.$$
+	From Part 4, we must have $w_1 = 0$ and $w_2 = w_0$, so the constraint equation reduces to
+	$$y_i(w_2\phi(x_i) + w_2) \geq 1$$
+	$$y_iw_2(\phi(x_i) + 1) \geq 1.$$
+	Examining the training set, the minimal $w_2$ that satisfies this constraint for all training points is $w_2 = 1$, giving
+	$$\boldw = (0, 1)^\top.$$
+	%We could also have seen this by recalling that $\boldw$ is parallel to $(0, 1)^\top$, the margin is 1, and that in the training problem we set our constraints to make the margin equal to $\frac{1}{||w||_2}$.
+	
+	\item From Part 4, the corresponding optimal value of $w_0$ is simply
+	$$w_0 = w_2 = 1.$$
+	This makes the discriminant function
+	\begin{align*}
+		h(\bphi(x);\boldw,w_0) &= \phi_2(x) + 1 \\
+		&= -\frac{8}{3}x^2 + \frac{2}{3}x^4 + 1.
+	\end{align*}
+
+	\item Only the points $i \in \{2, 3, 4, 5, 6\}$, which have $x_i \in \{-2, -1, 0, 1, 2\}$, could possibly be support vectors of the classifier, since if either of the points $i \in \{-3, 3\}$ were on the margin boundary, some of the training points would have to be misclassified. The constraints for the possible support vector points are
+	\begin{align*}
+		&y_2(h(\phi(-2); \boldw, w_0)) = 1(0 + 1) &= 1 \\
+		&y_3(h(\phi(-1); \boldw, w_0)) = -1(-2 + 1) &= 1 \\
+		&y_4(h(\phi(0); \boldw, w_0)) = 1(0 + 1) &= 1 \\
+		&y_5(h(\phi(1); \boldw, w_0)) = -1(-2 + 1) &= 1 \\
+		&y_6(h(\phi(2); \boldw, w_0)) = 1(0 + 1) &= 1
+	\end{align*}
+	
+	\item The alternate feature mapping plot is:
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]{svm_alt}
+	\end{center}
+	This still admits a separable solution, since there is space for a line between the classes, including an optimal line where the second dimension is equal to -1.5. The margin, however, is only 0.5, which is smaller than in the original feature mapping. Based on this, I would prefer the original set of features $\phi$, because they allow for a larger margin and therefore a greater degree of separation between the classes, ideally making the boundary more robust to future data.
+\end{enumerate}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -209,6 +270,16 @@ The code in \texttt{T4\_P2.py} loads the images into your environment into two a
 
 
 \subsection*{Solution}
+
+\begin{enumerate}
+	\item \includegraphics[width=0.7\textwidth]{SVM}
+	\item 
+	\item 
+	\item 
+	\item 
+	\item
+	\item
+\end{enumerate}
 
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
