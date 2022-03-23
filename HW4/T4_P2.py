@@ -14,7 +14,7 @@ class KMeans(object):
     def __init__(self, K):
         self.K = K
 
-    # X is a (N x 28 x 28) array where 28x28 is the dimensions of each of the N images.
+    # X is a (N x 784) array since the dimension of each image is 28x28.
     def fit(self, X):
         pass
 
@@ -27,6 +27,7 @@ class HAC(object):
     def __init__(self, linkage):
         self.linkage = linkage
     
+    # X is a (N x 784) array since the dimension of each image is 28x28.
     def fit(self, X):
         pass
 
