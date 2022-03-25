@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
 from copy import deepcopy
+import seaborn as sns
 
 # Loading datasets for K-Means and HAC
 small_dataset = np.load("data/small_dataset.npy")
@@ -51,6 +52,13 @@ class KMeans(object):
     # This should return the arrays for K images. Each image should represent the mean of each of the fitted clusters.
     def get_mean_images(self):
         return self.mu
+
+    def get_nimages_per_cluster(self):
+        return np.unique(self.z, return_counts=True)[1]
+
+    # n_clusters argument is to have same function signature as HAC method
+    def get_image_assignments(self, n_clusters):
+        return self.z
 
 class HAC(object):
     def __init__(self, linkage):
@@ -104,7 +112,19 @@ class HAC(object):
         sets = self.clusters[len(self.clusters) - n_clusters]
         return np.array([np.mean(self.X[list(s)], 0) for s in sets])
 
-# ==== TESTS and PLOTS ====
+    def get_nimages_per_cluster(self, n_clusters):
+        return [len(s) for s in self.clusters[len(self.clusters) - n_clusters]]
+
+    # N x 1 array of image assignments
+    def get_image_assignments(self, n_clusters):
+        assignments = np.zeros(self.X.shape[0], dtype=np.uint32)
+        sets = self.clusters[len(self.clusters) - n_clusters]
+        for cluster_id, s in enumerate(sets):
+            for img_id in s:
+                assignments[img_id] = cluster_id
+        return assignments
+
+# =========================== TESTS and PLOTS ================================ #
 
 # Plotting code for parts 2 and 3
 def make_mean_image_plot(data, standardized=False, name=None):
@@ -132,9 +152,9 @@ def make_mean_image_plot(data, standardized=False, name=None):
     plt.show()
 
 # Plotting code for part 4
+LINKAGES = [ 'max', 'min', 'centroid' ]
+n_clusters = 10
 def make_hac_image_plot(data, name=None):
-    LINKAGES = [ 'max', 'min', 'centroid' ]
-    n_clusters = 10
     fig = plt.figure(figsize=(10,10))
     plt.suptitle("HAC mean images with max, min, and centroid linkages")
     for l_idx, l in enumerate(LINKAGES):
@@ -160,12 +180,12 @@ make_mean_image_plot(data, standardized=False, name='check')
 make_hac_image_plot(data, name='check')
 
 # ~~ Part 1 ~~
-KMeansClassifier = KMeans(K=10)
-KMeansClassifier.fit(large_dataset)
+kmeans_large_dataset = KMeans(K=10)
+kmeans_large_dataset.fit(large_dataset)
 plt.title("K-means objective function")
 plt.xlabel("Iteration")
 plt.ylabel("Residual sum of squares")
-plt.plot(KMeansClassifier.loss)
+plt.plot(kmeans_large_dataset.loss)
 plt.tight_layout()
 plt.savefig("kmeans_obj.png")
 plt.show()
@@ -182,8 +202,46 @@ make_mean_image_plot(large_dataset_standardized, True)
 # ~~ Part 4 ~~
 make_hac_image_plot(small_dataset)
 
-# TODO: Write plotting code for part 5
+# ~~ Part 5 ~~
+methods = ['kmeans']
+small_dataset_models = {}
+hac_nimages_per_cluster = []
+for linkage in LINKAGES:
+    hac = HAC(linkage)
+    hac.fit(small_dataset)
+    hac_nimages_per_cluster.append(hac.get_nimages_per_cluster(n_clusters))
+    method = 'hac_' + linkage
+    methods.append(method)
+    small_dataset_models[method] = hac
 
-# TODO: Write plotting code for part 6
+# Plot size cluster sizes for each method
+for nimages_per_cluster, method in zip([kmeans_large_dataset.get_nimages_per_cluster()] + hac_nimages_per_cluster, methods):
+    plt.title("Images per cluster (" + method + ")")
+    plt.xlabel("Cluster index")
+    plt.ylabel("Number of images in cluster")
+    plt.bar(np.arange(10), nimages_per_cluster)
+    plt.tight_layout()
+    plt.savefig(method + '_nimages_per_cluster.png')
+    plt.show()
 
+# ~~ Part 6 ~~
+kmeans_small_dataset = KMeans(K=10)
+kmeans_small_dataset.fit(small_dataset)
+small_dataset_models['kmeans'] = kmeans_small_dataset
+
+# Plot confusion matrix between each pair of methods
+r = range(len(methods))
+for m1, m2 in [(methods[i], methods[j]) for i in r[:-1] for j in r[i+1:]]:
+    plt.title(f'Confusion ({m1} vs. {m2})')
+    confusion = np.zeros((n_clusters, n_clusters))
+    m1_assns = small_dataset_models[m1].get_image_assignments(n_clusters)
+    m2_assns = small_dataset_models[m2].get_image_assignments(n_clusters)
+    for img_id in range(len(small_dataset)):
+        confusion[m1_assns[img_id]][m2_assns[img_id]] += 1
+    ax = sns.heatmap(confusion)
+    # Seaborn heapmap axis order is swapped
+    ax.set_ylabel(m1)
+    ax.set_xlabel(m2)
+    plt.savefig(m1 + '_' + m2 + '_confusion.png')
+    plt.show()
 

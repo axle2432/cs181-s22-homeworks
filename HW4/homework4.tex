@@ -22,6 +22,8 @@
 \usepackage[mmddyyyy,hhmmss]{datetime}
 
 \usepackage{comment}
+\usepackage{subcaption}
+\usepackage{mdframed}
 
 \definecolor{verbgray}{gray}{0.9}
 
@@ -273,7 +275,7 @@ The code in \texttt{T4\_P2.py} loads the images into your environment into two a
 
 \begin{enumerate}
 	\item The objective function never increases:
-	
+		
 	\begin{center}
 		\includegraphics[width=0.7\textwidth]{kmeans_obj}
 	\end{center}
@@ -301,9 +303,73 @@ The code in \texttt{T4\_P2.py} loads the images into your environment into two a
 
 	We only need to run HAC once since, after selecting a linkage criterion, it is a deterministic algorithm, meaning the clusters would be the same in every iteration.
 
-	\item 
-	\item
-	\item
+	\item See Figure \ref{fig:2.5}.
+	
+	\begin{figure}[h]
+		\centering
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{kmeans_nimages_per_cluster}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{hac_min_nimages_per_cluster}
+		\end{subfigure}
+		\hfill
+		\vskip\baselineskip
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{hac_max_nimages_per_cluster}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{hac_centroid_nimages_per_cluster}
+		\end{subfigure}
+		\caption{Number of images per cluster}
+		\label{fig:2.5}
+	\end{figure}
+
+	Intuitively, the plots show that the max-linkage criterion produced a variety of clusters of unequal, but still considerable, sizes. By contrast, the min-linkage criterion produced one cluster containing almost all of the images, with the rest of the clusters being much smaller. Presumably the small clusters contain those images which are farthest away from any other image.
+	
+	Going back to the previous part, this explains why many of the mean images in the min- and centroid-linkage models were very crisp, while one image was quite blurry. The crisp images are because many of the classes in these models contain only one or a few images, all of which are quite similar to each other, giving them a very crisp mean. By contrast, the class with most of the images has a very blurry mean, since it is comprised of images of many different digits. In a less extreme sense, the same logic helps explain why some of the max-linkage model mean images are crisper than others.
+	
+	\item See Figure \ref{fig:2.6}.
+	
+	\begin{figure}[h]
+		\centering
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{kmeans_hac_min_confusion}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{kmeans_hac_max_confusion}
+		\end{subfigure}
+		\hfill
+		\vskip\baselineskip
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{kmeans_hac_centroid_confusion}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{hac_max_hac_min_confusion}
+		\end{subfigure}
+		\hfill
+		\vskip\baselineskip
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{hac_max_hac_centroid_confusion}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}
+			\includegraphics[width=\textwidth]{hac_min_hac_centroid_confusion}
+		\end{subfigure}
+		\caption{Confusion matrices}
+		\label{fig:2.6}
+	\end{figure}
+
+	Max-linkage HAC is the closest to K-Means, which we can see from the non-negligible number of shared images for each class. By contrast, the min- and centroid-linkage HAC models have large vertical bars on their heatmaps which indicate that almost all of their images are in the same class, regardless of the class K-Means puts them in.
+	
+	Max-linkage HAC is closest to K-Means because K-Means tends to group the data points into clusters that are hypersphere-like in order to minimize the distances of points to their means. Similarly, the HAC max-linkage criterion tends to group the data points into hypersphere-like clusters in order to minimize the distance of new points to the farthest-away point in the sphere. By contrast, the min- and centroid-linkage critera can produce stringer clusters, or in this case can group most of the data points into one cluster when they are relatively evenly spread out in space, because they can start with one cluster and gradually expand it across the space to include most of the data points without incurring a substantial penalty for having a large, spread-out cluster.
+	
+	\item Yes, it does seem like comparing the clusterings to the true digit labels is a reasonable evaluation metric since our goal from the outset was to find a clustering method that could correctly classify the images into digits as well as possible. Comparing against the true digit labels would give us an empirical measure of how well each clustering method identifies the true clusters of images into digits.
+	
 \end{enumerate}
 
 \newpage
@@ -343,18 +409,60 @@ Draw a causal chain that resulted in this outcome and circle the choice points t
 
 \end{problem}
 
+\subsection*{Solution}
+
+Outcome: An NLP algorithm filled in the inference “Man is to 
+\_\_\_\_ as woman is to \_\_\_\_” with “Man is 
+to computer programmer as woman is to homemaker” (Bolukbasi 
+et al, 2016).
+
+We present the causal chain as a list in chronological order. The choice point that is the largest contributor to the outcome is underlined. Morally relevant choice points are followed by alternative decisions.
+
+\begin{enumerate}
+	\item Development of natural language processing algorithms for applications like speech recognition and generation.
+
+	\item \ul{The concept of word embedding is developed. Word embeddings transform words into vectors in a high-dimensional space that relates words by similarity along various dimensions.}
+	
+		\begin{enumerate}
+			\item Alternative 1 (Naive): Don't use word embeddings, and instead use ``one-hot" or ``bag of words" representations of text. This avoids word representations having any gender bias, because the representations of words have no relationship to their meaning. However, this denies us the important benefits of word embeddings, not only for comparing similar words, but also for ease of NLP training and the representation of large vocabularies.
+			\item Alternative 2: Recognize that word embeddings have the potential to encode both actual similarities and stereotypical similarities, and proceed to develop the theory of word embeddings with this in mind.
+		\end{enumerate}
+	
+	\item Embeddings like word2vec train on large corpora using ``second-order" techniques, which uncover both implicit meaning and implicit bias in texts, rather than ``first-order" techniques, which simply count the number of times words occur near each other. First-order techniques might not, for example, not consider the word ``nurse" feminine, since the phrase ``male nurse" occurs more often in the world than ``female nurse," because the ``female" part is often left implicit when describing a ``female nurse." Second-order techniques uncover the implicit bias and consider the word ``nurse" feminine.
+		\begin{enumerate}
+			\item Alternative 1 (Naive): Use only first-order techniques. However, as in the example of ``nurse," this could create bias in the other direction, where ``nurse" becomes associated with males. Additionally, first-order techniques severely limit the expressivity of the resulting embeddings.
+			\item Alternative 2: Attempt to hardcode gender-neutrality into training algorithms for word embeddings, so that bias is removed in the training process.
+		\end{enumerate}
+	
+	\item Researchers train use word2vec to train an embedding called w2vNEWS on a corpus of Google News texts consisting of 3 million English words, placing them in 300 dimensions. Even though the news articles are primarily written by professional journalists and should ideally exhibit little gender bias, bias still occurs in the embeddings.
+		\begin{enumerate}
+			\item Alternative 1 (Naive): Systematically review the corpus by hand for gender bias, both implicit and explicit, and edit articles to remove it. However, this could be impractically time consuming. Additionally, there are no guarantees that the human reviewers would find or successfully correct all bias due to their own biases. It would not be possible to carry this process out using ML, since the reviewing model would itself have bias if not trained on unbiased data.
+			\item Alternative 2: De-bias word embeddings after training using the techniques developed by Bolukbasi et al. This is probably the best alternative of all those considered. In the future, this de-biasing process could hopefully be automatically applied to all word embeddings after they are generated to make all future embeddings free of gender- and other-biases. 
+		\end{enumerate}
+
+	\item An NLP algorithm filled in the inference “Man is to \_\_\_\_ as woman is to \_\_\_\_” with “Man is to computer programmer as woman is to homemaker”
+\end{enumerate}
+
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Name and Calibration
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection*{Name}
-% ASK IF THEY CAME TO OFFICE HOURS
+
+Alex Encalada-Stuart
+
 \subsection*{Collaborators and Resources}
-Whom did you work with, and did you use any resources beyond cs181-textbook and your notes?\\
-\\
+Whom did you work with, and did you use any resources beyond cs181-textbook and your notes?
+
+No one and no
+
 Did you attend office hours for help with this homework?
+
+No
 
 \subsection*{Calibration}
 Approximately how long did this homework take you to complete (in hours)? 
+
+16
 
 \end{document}
