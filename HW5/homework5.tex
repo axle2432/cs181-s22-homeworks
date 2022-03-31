@@ -37,6 +37,8 @@
   basicstyle=\ttfamily,
   columns=fullflexible}}{}
 
+\newcommand{\TODO}{{\color{red}TODO }}
+
 \begin{document}
 
 
@@ -144,43 +146,138 @@ Using the~$\boldq_n$ estimates from the Expectation Step, derive an update for m
 \subsection*{Solution}
 
 \begin{enumerate}
-  \item
-  \item 
-  \item 
+  \item The likelihood expands to
+	\begin{align*}
+	 	\log p(\{x_n\}^N_{n=1}; \btheta, \{\beta_k\}^K_{k = 1})
+	 	&= \log \prod_{n=1}^N p(x_n; \btheta, \{\beta_k\}^K_{k = 1}) \\
+	 	&= \log \prod_{n=1}^N \sum_{k=1}^K p(x_n, z_{nk}; \btheta, \{\beta_k\}^K_{k = 1}) \\
+	 	&= \sum_{n=1}^N \log \left[\sum_{k=1}^K p(x_n, z_{nk}; \btheta, \{\beta_k\}^K_{k = 1})\right].
+	\end{align*}
+	Optimizing this likelihood directly is intractable because of the summation over the $K$ classes inside of the logarithm, which precludes an analytical solution.
+  
+  \item The negative complete data log likelihood expands to
+	\begin{align*}
+		\mcL(\btheta, \{\beta_k\}^K_{k=1})
+		&=  -\log p(\mathcal D; \btheta, \{\beta_k\}^K_{k=1}) \\
+		&=  -\sum_{n=1}^N \log p(x_n, \boldz_n; \btheta, \{\beta_k\}^K_{k=1}) \\
+		&= -\sum_{n=1}^N \log [p(x_n | \boldz_n; \{\beta_k\}^K_{k=1})p(\boldz_n; \btheta)] \\
+		&= -\sum_{n=1}^N \log p(x_n | \boldz_n; \{\beta_k\}^K_{k=1}) + \log p(\boldz_n; \btheta).
+	\end{align*}
+	Applying the power trick,
+		\begin{align*}
+		\mcL(\btheta, \{\beta_k\}^K_{k=1})
+		&= -\sum_{n=1}^N \left[ \log \prod_{k=1}^K p(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1})^{z_{nk}} + \log \prod_{k=1}^K \theta_k^{z_{nk}} \right] \\
+		&= -\sum_{n=1}^N \sum_{k=1}^K z_{nk} \log p(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1}) + z_{nk} \log \theta_k.
+	\end{align*}
+  
+  \item Using Bayes' Rule and the power trick,
+  \begin{align*}
+  	p(\boldz_n|x_n; \btheta, \{\beta_k\}^K_{k=1})
+  	&=\frac{\prod_{k=1}^K \left(p(x_n|\boldz_n=\boldC_k; \{\beta_k\}^K_{k=1})\theta_k\right)^{z_{nk}}}{\sum_{k=1}^Kp(x_n|\boldz_n=\boldC_k; \{\beta_k\}^K_{k=1})\theta_k} \\
+  	 &=\frac{\prod_{k=1}^K (p(x_n|\boldz_n=\boldC_k; \{\beta_k\}^K_{k=1}))^{z_{nk}} \prod_{k=1}^K (\theta_k)^{z_{nk}}}{\sum_{k=1}^Kp(x_n|\boldz_n=\boldC_k; \{\beta_k\}^K_{k=1})\theta_k}.
+  \end{align*}
+	The soft assignment value for a particular class $k$ is
+	\begin{align*}
+		q_{nk} &= p(\boldz_n = \boldC_k |x_n; \btheta, \{\beta_k\}^K_{k=1}) \\
+		&= \frac{p(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1})p(\boldz_n = \boldC_k; \btheta)}{\sum_{k=1}^Kp(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1})p(\boldz_n = \boldC_k; \btheta)} \\
+		&= \frac{p(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1})\theta_k}{\sum_{k=1}^Kp(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1})\theta_k}.
+	\end{align*}
+	Therefore,
+	 \begin{align*}
+		\textbf{q}_n &= \begin{bmatrix}
+			\frac{p(x_n|\boldz_n = \boldC_1; \{\beta_k\}^K_{k=1})\theta_1}{\sum_{k=1}^Kp(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1})\theta_k} \\
+			\vdots \\
+			\frac{p(x_n|\boldz_n = \boldC_K; \{\beta_k\}^K_{k=1})\theta_K}{\sum_{k=1}^Kp(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1})\theta_k}
+		\end{bmatrix}.
+	\end{align*}
+  
   \item 
     \begin{enumerate}
+      \item The expected complete data log likelihood is
+      \begin{align*}
+      &\mathbb{E}_{\{\boldz_n\}_{n=1}^N | \{x_n\}_{n=1}^N} \left[\log p(\mathcal D; \btheta, \{\beta_k\}^K_{k=1})\right] \\
+      &= \mathbb{E}_{\{\boldz_n\}_{n=1}^N | \{x_n\}_{n=1}^N} \left[\sum_{n=1}^N \log p(x_n|\boldz_n; \{\beta_k\}^K_{k=1}) + \log p(\boldz_n; \btheta)\right] \\
+	  &= \sum_{n=1}^N \mathbb{E}_{\boldz_n | x_n} \left[\log p(x_n|\boldz_n; \{\beta_k\}^K_{k=1}) + \log p(\boldz_n; \btheta)\right] \\
+	  &= \sum_{n=1}^N \sum_{k=1}^K p(\boldz_n = \boldC_k|x_n; \btheta, \{\beta_k\}^K_{k=1}) (\log p(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1}) + \log p(\boldz_n = \boldC_k; \btheta)) \\
+	  &= \sum_{n=1}^N \sum_{k=1}^K q_{nk} \log p(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1}) + q_{nk} \log \theta_k,
+      \end{align*}
+      where $q_{nk}$ is the probability computed in the E-step.
+
+      \item Use Lagrange multipliers on the expected complete data log likelihood from the previous part with the constraint $\sum_k \theta_k - 1 = 0$. The Lagrangian is
+      $$\sum_{n=1}^N \sum_{k=1}^K \left(q_{nk} \log p(x_n|\boldz_n = \boldC_k; \{\beta_k\}^K_{k=1}) + q_{nk} \log \theta_k\right) - \lambda\left(\sum_{k=1}^K \theta_k - 1\right).$$
+      Optimizing by differentiating with respect to $\theta_k$ and setting equal to zero, noting that we treat the $q_{nk}$ as fixed in the M-step:
+	  \begin{align*}
+		\sum_{n=1}^N \frac{q_{nk}}{\theta_k} - \lambda = 0 \\
+	  	\theta_k = \frac{\sum_{n=1}^N q_{nk}}{\lambda}.
+	  \end{align*}
+  	  Summing over $k$, recalling that $\sum_k \theta_k = 1$,
+  	  	$$\sum_{k=1}^K \theta_k = \frac{\sum_{k=1}^K \sum_{n=1}^N q_{nk}}{\lambda} = 1 \Rightarrow \lambda = \sum_{k=1}^K \sum_{n=1}^N q_{nk} = \sum_{n=1}^N \sum_{k=1}^K q_{nk}.$$
+ 	Substituting this expression for $\lambda$ back into our expression for $\theta_k$,
+ 	$$\theta_k = \frac{\sum_{n=1}^N q_{nk}}{\sum_{n=1}^N \sum_{k=1}^K q_{nk}} = \frac{\sum_{n=1}^N q_{nk}}{N}.$$
+ 	Therefore the optimal $\btheta$ is
+ 	$$\left(\frac{\sum_{n=1}^N q_{n1}}{N}, \ldots, \frac{\sum_{n=1}^N q_{nK}}{N}\right).$$
+ 	This makes intuitive sense because the optimal $\theta_k$ for each class is proportional to the sum of all of the data points' soft assignment probabilities for that class.
+ 	
       \item 
-      \item 
-      \item 
+      
+      % old math using betas as scale rather than rate
+      \begin{comment}
+      Substituting the gamma PDF into the expected complete data log likelihood gives
+      $$\sum_{n=1}^N \sum_{k=1}^K q_{nk} \log \frac{(x_n)^{\alpha-1}e^{-x_n/\beta_k}}{(\beta_k)^\alpha\Gamma(\alpha)} + q_{nk} \log \theta_k$$
+      $$\sum_{n=1}^N \sum_{k=1}^K q_{nk} \left((\alpha - 1)\log x_n - \frac{x_n}{\beta_k} - \alpha \log \beta_k - \log \Gamma(\alpha)\right)+ q_{nk} \log \theta_k$$
+      Optimizing by differentiating with respect to $\beta_k$ and setting equal to zero, we have
+      $$\sum_{n=1}^N q_{nk} \frac{x_n}{\beta_k^2} - q_{nk} \frac{\alpha}{\beta_k} = 0$$	$$\beta_k = \frac{1}{\alpha} \cdot \frac{\sum_{n=1}^N q_{nk} x_n}{\sum_{n=1}^N q_{nk}}.$$
+      This optimal $\beta_k$ makes intuitive sense because it is $1/\alpha$ times the weighted average of all of the $x_n$, where each $x_n$ is weighted by how likely it currently is to belong to class $k$.
+      \end{comment}
+  
+      Substituting the gamma PDF into the expected complete data log likelihood gives
+	  $$\sum_{n=1}^N \sum_{k=1}^K q_{nk} \log \frac{(x_n)^{\alpha-1}e^{-\beta_k x_n}(\beta_k)^\alpha}{\Gamma(\alpha)} + q_{nk} \log \theta_k$$
+	  $$\sum_{n=1}^N \sum_{k=1}^K q_{nk} \left((\alpha - 1)\log x_n - \beta_kx_n + \alpha \log \beta_k - \log \Gamma(\alpha)\right)+ q_{nk} \log \theta_k$$
+	  Optimizing by differentiating with respect to $\beta_k$ and setting equal to zero, we have
+	  $$\sum_{n=1}^N -q_{nk} x_n + q_{nk} \frac{\alpha}{\beta_k} = 0$$
+	  $$\beta_k = \alpha \cdot \frac{\sum_{n=1}^N q_{nk}}{\sum_{n=1}^N q_{nk} x_n}.$$
+	  This optimal $\beta_k$ makes intuitive sense because it is $\alpha$ times the reciprocal of the weighted average of all of the $x_n$, where each $x_n$ is weighted by how likely it currently is to belong to class $k$.
+
     \end{enumerate}
   \item 
+  Yes, we could reuse the derivated parameter estimates by substituting $\boldq_n$ with $\boldz_n$ for each data point, making $q_{nk}=1$ for the true class $k$ and $q_{nk}=0$ for all other classes. This corresponds to predicting the true class with probability 1. This substitution gives the following MLE parameters:
+  $$\theta_k = \frac{\sum_{n=1}^N q_{nk}}{N} =  \frac{\sum_{n=1}^N z_{nk}}{N},$$
+  which is the empirical proportion of data points in class $k$, and
+  $$\beta_k = \alpha \cdot \frac{\sum_{n=1}^N q_{nk}}{\sum_{n=1}^N q_{nk} x_n} = \alpha \cdot \frac{\sum_{n=1}^N z_{nk}}{\sum_{n=1}^N z_{nk} x_n}.$$
+  which is $\alpha$ times the reciprocal of the empirical mean of data points in class $k$. These parameters can be used to approximate the joint distribution $p(x_n, \boldz_n; \btheta, \{\beta_k\}^K_{k = 1})$, which can in turn be used to predict $\boldz_n$ given $x_n$ using Bayes' rule, as we did in classification:
+  $$p(\boldz_n = \boldC_k | x_n; \btheta, \{\beta_k\}^K_{k = 1}) = \frac{p(x_n, \boldz_n; \btheta, \{\beta_k\}^K_{k = 1})}{p(x_n; \btheta, \{\beta_k\}^K_{k = 1})} \propto p(x_n | \boldz_n = \boldC_k; \{\beta_k\}^K_{k = 1})p(\boldz_n = \boldC_k; \btheta).$$
+  
   \item 
     Plot:
 
-    % \includegraphics[width=\linewidth]{p1}
+    \includegraphics[width=\linewidth]{p1}
 
     Code:
 
     \begin{python}
 def e_step(theta, betas):
-    q = 'not implemented'
+    log_q = ds.gamma.Gamma(alpha, betas).log_prob(x) + torch.log(theta)
+    q = torch.exp(log_q - log_q.logsumexp(dim=1, keepdim=True))
     return q
 
 
 def m_step(q):
-    theta_hat = 'not implemented'
-    beta_hats = 'not implemented'
+    q_sums = torch.sum(q, 0)
+    theta_hat = q_sums / q.shape[0]
+    beta_hats = alpha * q_sums / torch.sum(q * x, 0)
     return theta_hat, beta_hats
 
 
 def log_px(x, theta, betas):
-    p = 'not implemented'
+    non_log_ps = (ds.gamma.Gamma(alpha, betas).log_prob(x) + torch.log(theta)).exp()
+    p = torch.log(non_log_ps.sum(1))
     return p
 
 
 def run_em(theta, betas, iterations=1000):
-    theta = 'not implemented'
-    betas = 'not implemented'
+    for _ in range(iterations):
+        q = e_step(theta, betas)
+        theta, betas = m_step(q)
     return theta, betas
     \end{python}
 \end{enumerate}
