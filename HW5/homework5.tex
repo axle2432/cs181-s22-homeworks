@@ -349,35 +349,58 @@ For this problem you will implement PCA from scratch on the first 6000 images of
 \subsection*{Solution}
 Plots:
 
-% \includegraphics[width=\linewidth]{p2_cfvs}
+ \includegraphics[width=\linewidth]{p2_cfvs}
 
-% \includegraphics[width=0.25\linewidth]{p2_mean}
-% \includegraphics[width=0.75\linewidth]{p2_pcomps}
+\includegraphics[width=0.25\linewidth]{p2_mean}
+\includegraphics[width=0.75\linewidth]{p2_pcomps}
 
 Code:
 
 \begin{python}
 def pca(x, n_comps=500):
-    top_eigvals = 'not implemented'
-    top_pcomps = 'not implemented'
+    # Center the data by subtracting the mean of each feature
+    x = x - x.mean(0)
+
+    # Calculate the empirical covariance matrix
+    emp_cov = x.T @ x / x.shape[0]
+
+    # Find the n_comps largest eigenvalues and corresponding eigenvectors
+    U, S, Vh = torch.linalg.svd(emp_cov)
+    top_eigvals = S[:n_comps]
+    top_pcomps = U.T[:n_comps] # eigenvectors are cols of U
     return top_eigvals, top_pcomps
 
 
 def calc_cfvs(eigvals):
-    cum_frac_vars = 'not implemented'
+    cum_frac_vars = torch.cumsum(eigvals, 0) / eigvals.sum()
     return cum_frac_vars
 
 
 def calc_errs(x, pcomps):
-    err_mean = 'not implemented'
-    err_pcomp = 'not implemented'
+    def calc_err(x, U):
+        x = x - x.mean(0) # center the data
+        z = x @ U.T # embeddings
+        err = (torch.linalg.norm(x - z @ U, 1) ** 2).mean(0)
+        return err
+    err_mean = calc_err(x, torch.zeros((1, x.shape[1]))) # mean - mean = 0
+    err_pcomp = calc_err(x, pcomps[:10])
     return err_mean, err_pcomp
 \end{python}
 
 \begin{enumerate}
-  \item 
-  \item 
-  \item 
+  \item From the second plot, nearly all of the variance is explained by the first 500 components, since the cumulative proportion is nearly at $k=500$ is almost 1. The cumulative proportion of variance increases with $k$, very rapidly until about $k=50$, where it reaches an ``elbow" point in the graph and begins to increase much more slowly, until it finally reaches 1 when $k$ is equal to the original dimension of the data.
+
+  \item The principle component images are similar to the cluster centers from K-means, particularly the cluster centers from K-means with standardized data, in that they vaguely resemble digits from 0-9, but the principle component images are generally blurrier and correspond less clearly to digits than the K-means cluster centers, with the first PC clearly representing ``0", a few of the PCs looking like ``9", and the rest looking like blurry ``8"s or amorphous blobs. This blurriness is partly because only the first ten PCs do not approximate the images well enough and partly because PCA generally results in less interpretable parameters than K-means.
+
+  \item
+  \texttt{Reconstruction error (using mean): 4.263164e+11 \\
+  	Reconstruction error (using mean and top 10 pcomps): 1.880565e+11}
+
+  For comparison, the final residual sum of squares objective loss I achieved by using K-means on the dataset was less than 1.30e+10.
+  
+  \TODO come back when HW4 solns are released to check against K-means loss
+
+  \item No, this would not change the quality of reconstruction error in the last problem, provided that the $z_n$ was recalculated accordingly for each data point $x_n$. This is because multiplying $U$ by a rotation matrix $R$ still gives an orthogonal matrix whose components span the subspace spanned by the $k$ eigenvectors in $U$. However, the interpretation of the components would change, because each component no longer corresponds to a direction of greatest variance in the data, since they have been rotated.
 \end{enumerate}
 
 \newpage
@@ -479,13 +502,38 @@ questions and show your work (i.e., state what the blocking path(s) is/are and w
 \newpage
 \section*{Solution}
 \begin{enumerate}
-  \item 
-  \item 
-  \item 
-  \item 
-  \item 
-  \item 
-  \item 
+  \item NO. The path $\attr{Weekend} \rightarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ is not blocked because we do not observe $\attr{Traveling}$. For intuition, if it was the weekend, the probability of travel could be increased, which could decrease the probability of getting sleep due to jet lag, etc.
+  \item YES. All of the paths between $\attr{Sick}$ and $\attr{Weekend}$ are blocked. The ``sub-path" $\attr{Sick} \rightarrow \attr{Get sleep} \leftarrow \attr{Traveling}$ is blocked because $\attr{Get sleep}$ is not observed, and the ``sub-paths" $\attr{Sick} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Traveling}$ and $\attr{Sick} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Friends over}$ are blocked because $\attr{Eat exotic foods}$ is not observed.
+  \item NO. The path $\attr{Sick} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Friends over}$ is unblocked when $\attr{Eat exotic foods}$ is observed.
+  For intuition, suppose the person is likely to eat exotic foods when they have friends over or when they are not sick. If we observe that they eat exotic foods, but do not have friends over, then it becomes more likely that they are not sick, due to the ``explaining away" effect.
+
+  \item NO. The path $\attr{Friends over} \leftarrow \attr{Weekend} \rightarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ is not blocked, since $\attr{Friends over} \leftarrow \attr{Weekend} \rightarrow \attr{Traveling}$ is not blocked given that $\attr{Weekend}$ is unobserved and $\attr{Weekend} \rightarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ is not blocked given that $\attr{Traveling}$ is not observed. For intuition, if the person had friends over, it could increase the probability of $\attr{Weekend}$, which could increase the probability of $\attr{Traveling}$, which could in turn decrease the probability of $\attr{Get sleep}$.
+  
+  \item YES. The path $\attr{Friends over} \leftarrow \attr{Weekend} \rightarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ is blocked, since $\attr{Weekend} \rightarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ is blocked given that $\attr{Traveling}$ is observed. The other possible paths, $\attr{Friends over} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ and $\attr{Friends over} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Sick} \rightarrow \attr{Get sleep}$, are blocked because $\attr{Friends over} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Traveling}$ and $\attr{Friends over} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Sick}$ are blocked given that $\attr{Eat exotic foods}$ is not observed.
+  
+  \item Removing the edge from $\attr{Traveling}$ to $\attr{Get sleep}$, the modified network is as follows.
+
+  \begin{center}
+  	\begin{tikzpicture}[
+  		node distance=1cm and .5cm,
+  		bn/.style={draw,ellipse,text width=2cm,align=center}
+  		]
+  		\node[bn] (w) {\attr{Weekend}};
+  		\node[bn,below right=of w] (t) {\attr{Traveling}};
+  		\node[bn,right=of t] (s) {\attr{Sick}};
+  		\node[bn,below left=of w] (f) {\attr{Friends over}};
+  		\node[bn,below right=of f] (eef) {\attr{Eat exotic foods}};
+  		\node[bn,right=of eef] (gs) {\attr{Get sleep}};
+  		\path (w) edge[-latex] (t)
+  		(w) edge[-latex] (f)
+  		(f) edge[-latex] (eef)
+  		(t) edge[-latex] (eef)
+  		(s) edge[-latex] (gs)
+  		(s) edge[-latex] (eef);
+  	\end{tikzpicture}
+  \end{center}
+
+  \item YES. The only path is $\attr{Friends over} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Sick} \rightarrow \attr{Get sleep}$, which is blocked because $\attr{Friends over} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Sick}$ is blocked given that $\attr{Eat exotic foods}$ is not observed. Observing $\attr{Eat exotic foods}$ would unblock this path, causing $\attr{Friends over}$ and $\attr{Get sleep}$ to no longer be independent, since $\attr{Eat exotic foods} \leftarrow \attr{Sick} \rightarrow \attr{Get sleep}$ is already unblocked given that $\attr{Sick}$ is not observed.
 \end{enumerate}
 
 \newpage
@@ -494,10 +542,16 @@ questions and show your work (i.e., state what the blocking path(s) is/are and w
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection*{Name}
 
+Alex Encalada-Stuart
+
 \subsection*{Collaborators and Resources}
 Whom did you work with, and did you use any resources beyond cs181-textbook and your notes?
 
+No one and none
+
 \subsection*{Calibration}
 Approximately how long did this homework take you to complete (in hours)? 
+
+20
 
 \end{document}
