@@ -365,40 +365,44 @@ def pca(x, n_comps=500):
     emp_cov = x.T @ x / x.shape[0]
 
     # Find the n_comps largest eigenvalues and corresponding eigenvectors
+    # Covariance matrices are symmetric positive semidefinite, so we can use SVD
     U, S, Vh = torch.linalg.svd(emp_cov)
     top_eigvals = S[:n_comps]
-    top_pcomps = U.T[:n_comps] # eigenvectors are cols of U
+    top_pcomps = Vh[:n_comps] # or could use cols of U
     return top_eigvals, top_pcomps
 
 
 def calc_cfvs(eigvals):
-    cum_frac_vars = torch.cumsum(eigvals, 0) / eigvals.sum()
-    return cum_frac_vars
+    return torch.cumsum(eigvals, 0) / eigvals.sum()
 
 
 def calc_errs(x, pcomps):
     def calc_err(x, U):
         x = x - x.mean(0) # center the data
-        z = x @ U.T # embeddings
-        err = (torch.linalg.norm(x - z @ U, 1) ** 2).mean(0)
-        return err
+        z = x @ U.T
+        reconst = z @ U
+        errs = torch.linalg.norm(x - reconst, dim=1) ** 2
+        return errs.mean(0)
     err_mean = calc_err(x, torch.zeros((1, x.shape[1]))) # mean - mean = 0
     err_pcomp = calc_err(x, pcomps[:10])
-    return err_mean, err_pcomp
+return err_mean, err_pcomp
 \end{python}
 
 \begin{enumerate}
   \item From the second plot, nearly all of the variance is explained by the first 500 components, since the cumulative proportion is nearly at $k=500$ is almost 1. The cumulative proportion of variance increases with $k$, very rapidly until about $k=50$, where it reaches an ``elbow" point in the graph and begins to increase much more slowly, until it finally reaches 1 when $k$ is equal to the original dimension of the data.
 
-  \item The principle component images are similar to the cluster centers from K-means, particularly the cluster centers from K-means with standardized data, in that they vaguely resemble digits from 0-9, but the principle component images are generally blurrier and correspond less clearly to digits than the K-means cluster centers, with the first PC clearly representing ``0", a few of the PCs looking like ``9", and the rest looking like blurry ``8"s or amorphous blobs. This blurriness is partly because only the first ten PCs do not approximate the images well enough and partly because PCA generally results in less interpretable parameters than K-means.
+  \item The principle component images are somewhat similar to the cluster centers from K-means, particularly the cluster centers from K-means with standardized data, in that they vaguely resemble digits from 0-9, but the principle component images are generally blurrier and correspond less clearly to digits than the K-means cluster centers, with the first PC clearly representing ``0", a few of the PCs looking like ``9", and the rest looking like blurry ``8"s or amorphous blobs. This blurriness is because in PCA, data points are represented as a linear combination of components, rather than each data point being associated with a single cluster image, as in K-means.
 
   \item
-  \texttt{Reconstruction error (using mean): 4.263164e+11 \\
-  	Reconstruction error (using mean and top 10 pcomps): 1.880565e+11}
-
-  For comparison, the final residual sum of squares objective loss I achieved by using K-means on the dataset was less than 1.30e+10.
+  \texttt{Reconstruction error (using mean): 3.436022e+06 \\
+  			 Reconstruction error (using mean and top 10 pcomps): 1.731315e+06}
   
-  \TODO come back when HW4 solns are released to check against K-means loss
+  By comparison, the mean final objective loss achieved by K-means on a similar subset of MNIST, using the result from Homework 4, is approximately
+  $$\frac{1.3 \times 10^{10}}{5000} = 2.6 \times 10^{6}.$$
+  The PCA reconstruction errors are quite similar to the K-means loss. Additionally, the K-means loss is quite close to the average of the reconstruction error using mean and the reconstruction error using the top ten principal components. Surprisingly, the PCA reconstruction error using the mean is only worse than the reconstruction error using the top ten principal components by a factor of about two. This is probably because while the digit images vary from the mean, they all consist of light pixels distributed around the center of the image in some way, and dark pixels elsewhere.
+
+  PCA and K-means are fairly distinct different methods of representing the data, which is why the reconstruction error and K-means loss are not exactly equal. However, the similarity of the losses suggest that the different sources of loss in the representations give roughly the same error, and thus preserve a similar amount of information about the data. In particular, in PCA, data points can in some sense be encoded more accurately sense than in K-means, because an encoding comprises a linear combination of $k$ images, not just the single closest image. In another sense, however, encodings in PCA are less accurate since the least significant $d-k$ dimensions are simply ignored, unlike in K-means. This gives roughly similar losses between the two methods.
+
 
   \item No, this would not change the quality of reconstruction error in the last problem, provided that the $z_n$ was recalculated accordingly for each data point $x_n$. This is because multiplying $U$ by a rotation matrix $R$ still gives an orthogonal matrix whose components span the subspace spanned by the $k$ eigenvectors in $U$. However, the interpretation of the components would change, because each component no longer corresponds to a direction of greatest variance in the data, since they have been rotated.
 \end{enumerate}
@@ -505,7 +509,7 @@ questions and show your work (i.e., state what the blocking path(s) is/are and w
   \item NO. The path $\attr{Weekend} \rightarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ is not blocked because we do not observe $\attr{Traveling}$. For intuition, if it was the weekend, the probability of travel could be increased, which could decrease the probability of getting sleep due to jet lag, etc.
   \item YES. All of the paths between $\attr{Sick}$ and $\attr{Weekend}$ are blocked. The ``sub-path" $\attr{Sick} \rightarrow \attr{Get sleep} \leftarrow \attr{Traveling}$ is blocked because $\attr{Get sleep}$ is not observed, and the ``sub-paths" $\attr{Sick} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Traveling}$ and $\attr{Sick} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Friends over}$ are blocked because $\attr{Eat exotic foods}$ is not observed.
   \item NO. The path $\attr{Sick} \rightarrow \attr{Eat exotic foods} \leftarrow \attr{Friends over}$ is unblocked when $\attr{Eat exotic foods}$ is observed.
-  For intuition, suppose the person is likely to eat exotic foods when they have friends over or when they are not sick. If we observe that they eat exotic foods, but do not have friends over, then it becomes more likely that they are not sick, due to the ``explaining away" effect.
+  For intuition, suppose the person is likely to eat exotic foods when they have friends over or when they are not sick. If we observe that they eat exotic foods, but do not have friends over, then it becomes more likely that they are not sick.
 
   \item NO. The path $\attr{Friends over} \leftarrow \attr{Weekend} \rightarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ is not blocked, since $\attr{Friends over} \leftarrow \attr{Weekend} \rightarrow \attr{Traveling}$ is not blocked given that $\attr{Weekend}$ is unobserved and $\attr{Weekend} \rightarrow \attr{Traveling} \rightarrow \attr{Get sleep}$ is not blocked given that $\attr{Traveling}$ is not observed. For intuition, if the person had friends over, it could increase the probability of $\attr{Weekend}$, which could increase the probability of $\attr{Traveling}$, which could in turn decrease the probability of $\attr{Get sleep}$.
   
