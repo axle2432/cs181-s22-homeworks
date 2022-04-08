@@ -47,7 +47,8 @@ class KMeans(object):
                 if n_members > 0:
                     self.mu[k] = np.sum(X[class_members], 0) / n_members
             # Squared loss for this iteration
-            self.loss.append(np.sum(np.linalg.norm(X - np.take(self.mu, self.z, axis=0))))
+            losses = np.linalg.norm(X - np.take(self.mu, self.z, axis=0), axis=1) ** 2
+            self.loss.append(np.sum(losses))
 
     # This should return the arrays for K images. Each image should represent the mean of each of the fitted clusters.
     def get_mean_images(self):
@@ -176,8 +177,10 @@ def make_hac_image_plot(data, name=None):
     plt.show()
 
 # Check algorithms against P2_Autograder_data
+'''
 make_mean_image_plot(data, standardized=False, name='check')
 make_hac_image_plot(data, name='check')
+'''
 
 # ~~ Part 1 ~~
 kmeans_large_dataset = KMeans(K=10)
