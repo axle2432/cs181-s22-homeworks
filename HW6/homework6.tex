@@ -6,9 +6,9 @@
 \newcommand{\attr}[1]{\textsf{#1}}
 \usepackage[OT1]{fontenc}
 \usepackage{float}
-\usepackage[colorlinks,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage[colorlinks,linkcolor=black,citecolor=blue,urlcolor=blue]{hyperref}
 \usepackage[pdftex]{graphicx}
-\usepackage{subfig}
+%\usepackage{subfig}
 \usepackage{fullpage}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -24,6 +24,9 @@
 \usepackage{framed}
 
 \usepackage[mmddyyyy,hhmmss]{datetime}
+
+\usepackage{subcaption}
+\usepackage{pythonhighlight}
 
 \definecolor{verbgray}{gray}{0.9}
 
@@ -122,9 +125,56 @@ $$
 \end{problem}
 
 \textbf{Solution:}
+\begin{enumerate}
+	\item Graphical model:
+	
+	\includegraphics{graphical_model}
+	
+	Yes, $R$ and $S$ are independent by the D-separation rules since $G$ is not observed.
+	
+	\item Since $R$ and $S$ are independent, the probability is $\Pr(S = 1 | R = 1) = \Pr(S = 1) = 0.5$.
+	
+	\item Using the definition of conditional probability and marginalizing out $R$,
+	\begin{align*}
+		\Pr(S = 1 | G = 1) &= \frac{\Pr(S = 1, G = 1)}{\Pr(G = 1)} \\
+		&= \frac{\Pr(S = 1, G = 1)}{\Pr(S = 0, G = 1) + \Pr(S = 1, G = 1)} \\
+		&= \frac{\sum_{R=0}^1 \Pr(R, S = 1, G = 1)}{\sum_{R=0}^1 \Pr(R, S = 0, G = 1) + \Pr(R, S = 1, G = 1)} \\
+		&= \frac{0.75 \cdot 0.5 \cdot 0.75 + 0.25 \cdot 0.5 \cdot 1}{0.75 \cdot 0.5 \cdot 0 + 0.25 \cdot 0.5 \cdot 0.75 + 0.75 \cdot 0.5 \cdot 0.75 + 0.25 \cdot 0.5 \cdot 1} \\
+		&= \frac{0.28125 + 0.125}{0 + 0.09375 + 0.28125 + 0.125} \\
+		&= \frac{0.40625}{0.5} \\
+		&= 0.8125.
+	\end{align*}
+	
+	\item Again using the definition of conditional probability,
+	\begin{align*}
+		\Pr(S = 1 | R = 1, G = 1) &= \frac{\Pr(R = 1, S = 1, G = 1)}{\Pr(R = 1, G = 1)} \\
+		&= \frac{\Pr(R = 1, S = 1, G = 1)}{\Pr(R = 1, S = 0, G = 1) + \Pr(R = 1, S = 1, G = 1)} \\
+		&= \frac{0.25 \cdot 0.5 \cdot 1}{0.25 \cdot 0.5 \cdot 0.75 + 0.25 \cdot 0.5 \cdot 1} \\
+		&= \frac{0.125}{0.09375 + 0.125} \\
+		&= \frac{0.125}{0.21875} \\
+		&\approx 0.571.
+	\end{align*}
+	
+	\item In part 3, the probability of the sprinkler being on increased significantly from its prior probability when we observed that the grass was wet. However, in part 4, when we also observed that it was raining, the probability of the sprinkler being on decreased towards our prior.
+	The rain ``explains away" the likely cause of the grass being wet, which means that the wet grass no longer offers as much information as to whether the sprinkler is on.
 
+	\item
+	$$
+	\Pr(R) = \sum_C \Pr(C)\Pr(R|C) \sum_G \sum_S \Pr(S|C)\Pr(G | R, S).
+	$$
+	
+	\item 
+	$$
+	\Pr(R) = \sum_S \sum_G \Pr(G | R, S) \sum_C \Pr(C)\Pr(R|C)\Pr(S|C).
+	$$
+	
+	\item The complexity of the ordering $S, G, C$ is $O(k^4)$, since to eliminate $S$, we sum over the $k$ values of $S$ for each possible value of $C, G,$ and $R$.
+	The complexity of the ordering $C, G, S$ is $O(k^3)$, since to eliminate $C$, we sum over the $k$ values of $C$ for each possible value of $R$ and $S$, and similarly do $O(k^3)$ work to eliminate $G$ and $O(k^2)$ work to eliminate $S$.
+	Therefore the ordering $C, G, S$ takes less computation.
+	
+\end{enumerate}
 
-
+\newpage
 
 \begin{problem}[Policy and Value Iteration, 15 pts]
 
@@ -186,8 +236,150 @@ Note that we are doing infinite-horizon planning to maximize the expected reward
 \end{framed}
 
 \textbf{Solution:}
+\begin{enumerate}
+	\item 
+	\begin{enumerate}
+		\item See \texttt{T6\_P2.ipynb}.
+		\item See \texttt{T6\_P2.ipynb}.
+		\item
+			\begin{figure*}
+				\centering
+				\begin{subfigure}[b]{0.475\textwidth}
+					\centering
+					\includegraphics[width=\textwidth]{Policy_1}
+				\end{subfigure}
+				\hfill
+				\begin{subfigure}[b]{0.475\textwidth}  
+					\centering 
+					\includegraphics[width=\textwidth]{Policy_2}
+				\end{subfigure}
+				\vskip\baselineskip
+				\begin{subfigure}[b]{0.475\textwidth}   
+					\centering 
+					\includegraphics[width=\textwidth]{Policy_3}
+				\end{subfigure}
+				\hfill
+				\begin{subfigure}[b]{0.475\textwidth}   
+					\centering 
+					\includegraphics[width=\textwidth]{Policy_4}
+				\end{subfigure}
+				\caption
+				{\small First four policy iterations} 
+				\label{fig:first-four-policy-iterations}
+			\end{figure*}
+		
+			See Figure \ref{fig:first-four-policy-iterations}.
+	
+			\item With \texttt{ct = 0.01}, the algorithm converges in 5 iterations. See Figure \ref{fig:policy-001} for the final learned value function and policy. Decreasing \texttt{ct} does not affect the number of iterations needed until convergence.
+			
+			\begin{figure}
+				\centering
+				\includegraphics[width=0.475\textwidth]{Policy_001}
+				\caption{\small Policy iteration final learned value function and policy}
+				\label{fig:policy-001}
+			\end{figure}
+			
+		\end{enumerate}
+	\item 
+		\begin{enumerate}
+			\item See \texttt{T6\_P2.ipynb}.
+			\item 
+			\begin{figure*}
+				\centering
+				\begin{subfigure}[b]{0.475\textwidth}
+					\centering
+					\includegraphics[width=\textwidth]{Value_1}
+				\end{subfigure}
+				\hfill
+				\begin{subfigure}[b]{0.475\textwidth}  
+					\centering 
+					\includegraphics[width=\textwidth]{Value_2}
+				\end{subfigure}
+				\vskip\baselineskip
+				\begin{subfigure}[b]{0.475\textwidth}   
+					\centering 
+					\includegraphics[width=\textwidth]{Value_3}
+				\end{subfigure}
+				\hfill
+				\begin{subfigure}[b]{0.475\textwidth}   
+					\centering 
+					\includegraphics[width=\textwidth]{Value_4}
+				\end{subfigure}
+				\caption
+				{\small First four value iterations} 
+				\label{fig:first-four-value-iterations}
+			\end{figure*}
 
+			See Figure \ref{fig:first-four-value-iterations}.
+	
+			\item With \texttt{ct = 0.01}, the algorithm converges in 25 iterations. See Figure \ref{fig:value-001} for the final learned value function and policy. With \texttt{ct = 0.001}, the algorithm converges  in 31 iterations to the same values and policy. With \texttt{ct = 0.0001}, the algorithm converges in 38 iterations to values identical to those in policy iteration and the same policy as in both policy and value iteration.
 
+			\begin{figure}
+				\centering
+				\includegraphics[width=0.475\textwidth]{Value_001}
+				\caption{\small Value iteration final learned value function and policy}
+				\label{fig:value-001}
+			\end{figure}
+			
+		\end{enumerate}
+	\item Value iteration takes significantly more iterations to converge than policy iteration does. However, the time per iteration is higher for policy iteration because at each iteration it must solve for the new values in policy evaluation, which involves looping multiple times until convergence. The overall CPU runtimes are given below.
+	
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			\texttt{ct} & Policy Iteration & Value Iteration \\\hline
+			\texttt{0.01} & \texttt{1.95 s} & \texttt{1.04 s} \\\hline
+			\texttt{0.001} & \texttt{1.94 s} & \texttt{1.26 s} \\\hline
+			\texttt{0.0001} & \texttt{2.19 s} & \texttt{1.57 s} \\\hline
+		\end{tabular}
+	\end{center}
+
+	This suggests that, at least for this implementation and problem instance, value iteration is faster overall, although its runtime increases faster as the convergence tolerance decreases.
+	
+	\item 
+	\begin{figure*}
+		\centering
+		\begin{subfigure}[b]{0.475\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{Policy_gamma_06}
+			\caption{\small $\gamma = 0.6$}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}  
+			\centering 
+			\includegraphics[width=\textwidth]{Policy_gamma_07}
+			\caption{\small $\gamma = 0.7$}
+		\end{subfigure}
+		\vskip\baselineskip
+		\begin{subfigure}[b]{0.475\textwidth}   
+			\centering 
+			\includegraphics[width=\textwidth]{Policy_gamma_08}
+			\caption{\small $\gamma = 0.8$}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.475\textwidth}   
+			\centering 
+			\includegraphics[width=\textwidth]{Policy_gamma_09}
+			\caption{\small $\gamma = 0.9$}
+		\end{subfigure}
+		\caption
+		{\small Learned policy for different discount factors $\gamma$} 
+		\label{fig:gamma}
+	\end{figure*}
+	See Figure \ref{fig:gamma}. The plots provided are from policy iteration, but the optimal policies determined by both policy and value iteration are identical, and their values only differ very slightly.
+	
+	For all values of $\gamma$, the optimal policy for states on the right-hand side is to move toward the reward of 50 and stay there.
+	For $\gamma = 0.6$, the optimal policy for states on the left-hand is to move towards the reward of 4 in the upper-left corner and stay there. For $\gamma = 0.7$ and $\gamma = 0.8$, the optimal policy is generally to get the reward of 4 if close to it, and then go around the states with reward -50 in the center to reach the state with reward 50. Finally, for $\gamma = 0.9$, the optimal policy for all states but one is to rush to the right as quickly as possible, going through the states with reward -50 if necessary, to get to the state with a reward of 50.
+
+	These varying policies make sense since for smaller values of $\gamma$, the algorithms are focused on rewards in the near future, like the 4 in the corner and avoiding the -50s in the center. However, for the larger values of $\gamma$, the algorithms care much more about reaching the globally highest reward-state as quickly as possible, since they still have high value for being there even after several moves to reach it.
+	
+	Increasing $\gamma$ increases the number of iterations and overall runtime for both policy and value iteration, because when updating the values of states and actions, the rewards of future states matter more and so must be calculated out farther into the future before converging.
+	
+	\item The optimal policy for most states on the right side and in the center would still be to go to the reward of 50 for all $\gamma$, since that is closest positive reward. For low values of $\gamma$, the optimal strategy starting from the left side is to go to the reward of 4, since it is closest and reaching either of the other rewards incurrs a negative reward along the way. For moderately large values of $\gamma$, the optimal policy is to traverse around the bottom of Gridworld to get to the reward of 50 fairly quickly, at the expense of a penalty of -20. For large values of $\gamma$, the optimal policy is to traverse around the top of Gridworld to reach the reward of 50 while incurring the minimum penalty of -10 along the way, at the expense of taking more time. Note that for no value of $\gamma$ will the optimal policy pass through the -50 states, since the maximum total reward is now 50, so passing through a -50 would result in a total reward of at most 0.
+	
+\end{enumerate}
+
+\newpage
 
 \begin{problem}[Reinforcement Learning, 20 pts]
   In 2013, the mobile game \emph{Flappy Bird} took the world by storm. You'll be developing a Q-learning agent to play a similar game, \emph{Swingy Monkey} (See Figure~\ref{fig:swingy}).  In this game, you control a monkey that is trying to swing on vines and avoid tree trunks.  You can either make him jump to a new vine, or have him swing down on the vine he's currently holding.  You get points for successfully passing tree trunks without hitting them, falling off the bottom of the screen, or jumping off the top.  There are some sources of randomness: the monkey's jumps are sometimes higher than others, the gaps in the trees vary vertically, the gravity varies from game to game, and the distances between the trees are different.  You can play the game directly by pushing a key on the keyboard to make the monkey jump.  However, your objective is to build an agent that \emph{learns} to play on its own. 
@@ -237,6 +429,80 @@ discount rate $\gamma$, and exploration rate $\epsilon$. \emph{Do not use outsid
     
 \textbf{Solution:}
 
+\textit{Code}:
+\begin{python}
+def action_callback(self, state):
+	"""
+	Implement this function to learn things and take actions.
+	Return 0 if you don't want to jump and 1 if you do.
+	"""
+	current_state = self.discretize_state(state)
+	
+	'''
+	# Perform Q-learning update using current state and last state
+	if self.last_state is not None:
+		td_error = (self.last_reward + self.gamma *
+							np.max(self.Q[:, current_state[0], current_state[1]]) -
+							self.Q[self.last_action, self.last_state[0], self.last_state[1]])
+		self.Q[self.last_action, self.last_state[0], self.last_state[1]] += self.alpha * td_error
+	'''
+	
+	# Perform Q-learning update using decaying alpha
+	if self.last_state is not None:
+		N_tsa = self.N[self.last_action, self.last_state[0], self.last_state[1]]
+		alpha_t = 1 / N_tsa
+		td_error = (self.last_reward + self.gamma *
+							np.max(self.Q[:, current_state[0], current_state[1]]) -
+							self.Q[self.last_action, self.last_state[0], self.last_state[1]])
+		self.Q[self.last_action, self.last_state[0], self.last_state[1]] += alpha_t * td_error
+
+	'''
+	# Choose next action using an epsilon-greedy policy
+	if npr.rand() > self.epsilon:
+		new_action = np.argmax(self.Q[:, current_state[0], current_state[1]])
+	else:
+		new_action = int(npr.rand() < 0.5)
+	'''
+	
+	# Choose next action using decaying epsilon-greedy policy
+	N_ts = np.sum(self.N[:, current_state[0], current_state[1]])
+	epsilon_t = 1 / N_ts if N_ts > 0 else 1
+	if npr.rand() > epsilon_t:
+		new_action = np.argmax(self.Q[:, current_state[0], current_state[1]])
+	else:
+		new_action = int(npr.rand() < 0.5)
+	
+	self.N[new_action, current_state[0], current_state[1]] += 1
+	self.last_action = new_action
+	self.last_state = current_state
+	
+	return new_action
+\end{python}
+
+\textit{Evaluation}:
+
+Through trial and error, I found good parameters $\alpha = 0.25, \gamma = 0.9, \epsilon = 0.001$ for the unmodified Q-learning with $\epsilon$-greedy policy. With these parameters, for each trial of 100 epochs, the agent consistently obtained a couple of scores in the 100s, more in the 10s, with the remaining half of the scores in the single digits. On a few trials, the agent scored over 1000 in a game. The most important parameter turned out to be $\epsilon$, which must be quite small or else the scores are all very low. This is because if $\epsilon$ is too high, even if an agent finds the optimal $Q$, it still performs poorly because it often takes random, rather than optimal, actions. This error compounds since the agent needs to consistently take good actions in a game to obtain a high score.
+
+\begin{comment}
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.8\textwidth]{T6_P3/q_learning_epsilon_scores}
+	\caption{Epoch number vs. average scores}
+	\label{fig:q_learning_epsilon_scores}
+\end{figure}
+\end{comment}
+\begin{center}
+	\includegraphics[width=0.75\textwidth]{T6_P3/q_learning_epsilon_scores}
+\end{center}
+
+I then implemented decaying $\epsilon$ and $\alpha$ to improve performance, by letting
+$$\epsilon_t(s) = \frac{1}{N_t(s)}$$
+where $N_t(s)$ is the number of times the learner visted state $s$ and
+$$\alpha_t(s, a) = \frac{1}{N_t(s, a)}$$
+where $N_t(s, a)$ is the number of times the learner took action $a$ in state $s$. This resulted in more games with scores over 100, usually around 10.
+The plot above shows average score per epoch for the non-decaying and decaying parameter agents, demonstrating the importance of a low $\epsilon$ and the superiority of decaying parameters.
+This performance improvement is because with a decaying $\epsilon$ and $\alpha$, the agent explores and learns more early on, then gradually converges to exploiting and learning less, rather than exploring and learning at the same rate throughout. A new issue I encountered is that the agent will sometimes perform very poorly on a trial and not get over 50 on any games. This is likely because an agent will be unlucky early on and explore mostly bad actions, then be stuck with exploiting those actions as the decay occurs.
+
 \newpage
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -244,8 +510,17 @@ discount rate $\gamma$, and exploration rate $\epsilon$. \emph{Do not use outsid
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \subsection*{Name}
+
+Alex Encalada-Stuart
+
 \subsection*{Collaborators and Resources}
 Whom did you work with, and did you use any resources beyond cs181-textbook and your notes?
+
+No one and no
+
 \subsection*{Calibration}
 Approximately how long did this homework take you to complete (in hours)? 
+
+15
+
 \end{document}

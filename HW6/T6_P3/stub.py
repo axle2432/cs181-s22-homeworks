@@ -18,7 +18,7 @@ Y_SCREEN = 900
 
 class Learner(object):
     """
-    This agent jumps randomly.
+    This agent learns the optimal policy using Q-learning.
     """
 
     def __init__(self):
@@ -29,6 +29,14 @@ class Learner(object):
         # We initialize our Q-value grid that has an entry for each action and state.
         # (action, rel_x, rel_y)
         self.Q = np.zeros((2, X_SCREEN // X_BINSIZE, Y_SCREEN // Y_BINSIZE))
+
+        # Number of times the learner took action a from state s
+        self.N = np.zeros((2, X_SCREEN // X_BINSIZE, Y_SCREEN // Y_BINSIZE))
+
+        # Q-learning parameters
+        self.alpha = 0.25
+        self.gamma = 0.9
+        self.epsilon = 0.001
 
     def reset(self):
         self.last_state = None
@@ -51,19 +59,47 @@ class Learner(object):
         Implement this function to learn things and take actions.
         Return 0 if you don't want to jump and 1 if you do.
         """
+        current_state = self.discretize_state(state)
 
-        # TODO (currently monkey just jumps around randomly)
-        # 1. Discretize 'state' to get your transformed 'current state' features.
-        # 2. Perform the Q-Learning update using 'current state' and the 'last state'.
-        # 3. Choose the next action using an epsilon-greedy policy.
+        '''
+        # Perform Q-learning update using current state and last state
+        if self.last_state is not None:
+            td_error = (self.last_reward + self.gamma *
+                        np.max(self.Q[:, current_state[0], current_state[1]]) -
+                        self.Q[self.last_action, self.last_state[0], self.last_state[1]])
+            self.Q[self.last_action, self.last_state[0], self.last_state[1]] += self.alpha * td_error
+        '''
 
-        new_action = npr.rand() < 0.1
-        new_state = state
+        # Perform Q-learning update using decaying alpha
+        if self.last_state is not None:
+            N_tsa = self.N[self.last_action, self.last_state[0], self.last_state[1]]
+            alpha_t = 1 / N_tsa
+            td_error = (self.last_reward + self.gamma *
+                        np.max(self.Q[:, current_state[0], current_state[1]]) -
+                        self.Q[self.last_action, self.last_state[0], self.last_state[1]])
+            self.Q[self.last_action, self.last_state[0], self.last_state[1]] += alpha_t * td_error
 
+        '''
+        # Choose next action using an epsilon-greedy policy
+        if npr.rand() > self.epsilon:
+            new_action = np.argmax(self.Q[:, current_state[0], current_state[1]])
+        else:
+            new_action = int(npr.rand() < 0.5)
+        '''
+
+        # Choose next action using decaying epsilon-greedy policy
+        N_ts = np.sum(self.N[:, current_state[0], current_state[1]])
+        epsilon_t = 1 / N_ts if N_ts > 0 else 1
+        if npr.rand() > epsilon_t:
+            new_action = np.argmax(self.Q[:, current_state[0], current_state[1]])
+        else:
+            new_action = int(npr.rand() < 0.5)
+
+        self.N[new_action, current_state[0], current_state[1]] += 1
         self.last_action = new_action
-        self.last_state = new_state
+        self.last_state = current_state
 
-        return self.last_action
+        return new_action
 
     def reward_callback(self, reward):
         """This gets called so you can see what reward you get."""
@@ -107,5 +143,5 @@ if __name__ == '__main__':
     run_games(agent, hist, 100, 100)
     print(hist)
 
-    # Save history. 
+    # Save history.
     np.save('hist', np.array(hist))
