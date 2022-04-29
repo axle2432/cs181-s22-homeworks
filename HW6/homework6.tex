@@ -190,6 +190,8 @@ Taking an action in Gridworld does not always succeed with probability
 $1$; instead the agent has probability $0.1$ of ``slipping'' into a
 state on either side, but not backwards.  For example, if the agent tries to move right from START, it succeeds with probability 0.8, but the agent may end up moving up or down with probability 0.1 each. Also, the agent cannot move off the edge of the grid, so moving left from START will keep the agent in the same state with probability 0.8, but also may slip up or down with probability 0.1 each. Lastly, the agent has no chance of slipping off the grid - so moving up from START results in a 0.9 chance of success with a 0.1 chance of moving right.
 
+Also, the agent does not receive the reward of a state immediately upon entry, but instead only after it takes an action at that state. For example, if the agent moves right four times (deterministically, with no chance of slipping) the rewards would be +0, +0, -50, +0, and the agent would reside in the +50 state. Regardless of what action the agent takes here, the next reward would be +50.
+
 Your job is to implement the following three methods in file \texttt{T6\_P2.ipynb}. Please use the provided helper functions \texttt{get\_reward} and \texttt{get\_transition\_prob} to implement your solution.
 
 \emph{Do not use any outside code.  (You may still collaborate with others according to the standard collaboration policy in the syllabus.)}  
